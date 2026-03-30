@@ -50,19 +50,37 @@ public class EditProfileActivity extends AppCompatActivity {
         }
 
         btnUpdate.setOnClickListener(v -> {
+            // 1. Lấy dữ liệu và dùng .trim() để xóa khoảng trắng thừa
+            String name = edtFullname.getText().toString().trim();
+            String email = edtEmail.getText().toString().trim();
+            String phone = edtPhone.getText().toString().trim();
+            String address = edtAddress.getText().toString().trim();
 
-            user.setFullname(edtFullname.getText().toString());
-            user.setEmail(edtEmail.getText().toString());
-            user.setPhone(edtPhone.getText().toString());
-            user.setAddress(edtAddress.getText().toString());
+            // 2. Kiểm tra dữ liệu trống
+            if (name.isEmpty() || email.isEmpty() || phone.isEmpty() || address.isEmpty()) {
+                Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-            boolean result = userDAO.updateUser(user);
+            // 3. Kiểm tra định dạng Email cơ bản
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                Toast.makeText(this, "Email không hợp lệ", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-            if(result){
-                Toast.makeText(this,"Cập nhật thành công",Toast.LENGTH_SHORT).show();
-                finish();
-            }else{
-                Toast.makeText(this,"Cập nhật thất bại",Toast.LENGTH_SHORT).show();
+            // 4. Phòng trường hợp đối tượng user bị null
+            if (user != null) {
+                user.setFullname(name);
+                user.setEmail(email);
+                user.setPhone(phone);
+                user.setAddress(address);
+
+                if (userDAO.updateUser(user)) {
+                    Toast.makeText(this, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
+                    finish();
+                } else {
+                    Toast.makeText(this, "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }

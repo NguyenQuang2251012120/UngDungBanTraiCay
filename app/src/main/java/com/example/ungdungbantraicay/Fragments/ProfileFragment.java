@@ -1,5 +1,6 @@
 package com.example.ungdungbantraicay.Fragments;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -22,21 +23,16 @@ import com.example.ungdungbantraicay.R;
 public class ProfileFragment extends Fragment {
 
     TextView txtUsername, txtFullname, txtEmail, txtPhone, txtAddress;
-
-    EditText edtPassword;
     Button btnEditProfile, btnChangePassword, btnLogout;
-
     UserDAO userDAO;
-    boolean isPasswordVisible = false;
 
     public ProfileFragment() {}
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
+        // Ánh xạ View chính xác với XML
         txtUsername = view.findViewById(R.id.txtUsername);
         txtFullname = view.findViewById(R.id.txtFullname);
         txtEmail = view.findViewById(R.id.txtEmail);
@@ -46,86 +42,54 @@ public class ProfileFragment extends Fragment {
         btnChangePassword = view.findViewById(R.id.btnChangePassword);
         btnLogout = view.findViewById(R.id.btnLogout);
 
-
         userDAO = new UserDAO(getActivity());
 
-        loadUserInfo();
+        // Load dữ liệu lần đầu
+        loadUser();
+
         btnEditProfile.setOnClickListener(v -> {
-
-                    Intent intent = new Intent(getActivity(), EditProfileActivity.class);
-                    startActivity(intent);
-
+            startActivity(new Intent(getActivity(), EditProfileActivity.class));
         });
+
         btnChangePassword.setOnClickListener(v -> {
-
-                    Intent intent = new Intent(getActivity(), ChangePasswordActivity.class);
-                    startActivity(intent);
-
+            startActivity(new Intent(getActivity(), ChangePasswordActivity.class));
         });
 
-            btnLogout.setOnClickListener(v -> {
+        btnLogout.setOnClickListener(v -> {
+            new androidx.appcompat.app.AlertDialog.Builder(getActivity())
+                    .setTitle("Xác nhận")
+                    .setMessage("Bạn có chắc chắn muốn đăng xuất?")
+                    .setPositiveButton("Đăng xuất", (dialog, which) -> {
+                        SharedPreferences prefs = getActivity().getSharedPreferences("USER_FILE", Context.MODE_PRIVATE);
+                        prefs.edit().clear().apply();
+                        startActivity(new Intent(getActivity(), LoginActivity.class));
+                        getActivity().finish();
+                    })
+                    .setNegativeButton("Hủy", null)
+                    .show();
+        });
 
-                    SharedPreferences prefs = getActivity()
-                            .getSharedPreferences("USER_FILE", getActivity().MODE_PRIVATE);
-
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.clear();
-                    editor.apply();
-
-                    Intent intent = new Intent(getActivity(), LoginActivity.class);
-                    startActivity(intent);
-
-                    getActivity().finish();
-            });
         return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        loadUser();
+        loadUser(); // Cập nhật lại nếu người dùng vừa sửa thông tin ở màn hình khác quay về
     }
 
-    void loadUser(){
-
-        UserDAO userDAO = new UserDAO(getContext());
-
-        SharedPreferences prefs = getActivity()
-                .getSharedPreferences("USER_FILE", getActivity().MODE_PRIVATE);
-
-        String username = prefs.getString("username","");
+    private void loadUser() {
+        SharedPreferences prefs = getActivity().getSharedPreferences("USER_FILE", Context.MODE_PRIVATE);
+        String username = prefs.getString("username", "");
 
         User user = userDAO.getUserInfo(username);
 
-        if(user != null){
-            txtUsername.setText(user.getUsername());
+        if (user != null) {
+            txtUsername.setText("@" + user.getUsername());
             txtFullname.setText(user.getFullname());
             txtEmail.setText(user.getEmail());
             txtPhone.setText(user.getPhone());
             txtAddress.setText(user.getAddress());
         }
     }
-    private void loadUserInfo(){
-
-        SharedPreferences prefs = getActivity()
-                .getSharedPreferences("USER_FILE", getActivity().MODE_PRIVATE);
-
-        String username = prefs.getString("username","");
-
-        Cursor cursor = userDAO.getUserByUsername(username);
-
-        if(cursor != null && cursor.moveToFirst()){
-
-            txtUsername.setText("Username: " + cursor.getString(1));
-            txtFullname.setText("Họ tên: " + cursor.getString(3));
-            txtEmail.setText("Email: " + cursor.getString(4));
-            txtPhone.setText("Phone: " + cursor.getString(5));
-            txtAddress.setText("Address: " + cursor.getString(6));
-
-            cursor.close();
-        }
-    }
-
-
-
-    }
+}

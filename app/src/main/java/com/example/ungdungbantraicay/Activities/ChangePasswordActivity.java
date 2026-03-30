@@ -31,33 +31,54 @@ public class ChangePasswordActivity extends AppCompatActivity {
         btnChangePassword = findViewById(R.id.btnChangePassword);
 
         btnChangePassword.setOnClickListener(v -> {
+            String oldPass = edtOldPassword.getText().toString().trim();
+            String newPass = edtNewPassword.getText().toString().trim();
+            String confirm = edtConfirmPassword.getText().toString().trim();
 
-            String oldPass = edtOldPassword.getText().toString();
-            String newPass = edtNewPassword.getText().toString();
-            String confirm = edtConfirmPassword.getText().toString();
+            // 1. Kiểm tra không được để trống
+            if (oldPass.isEmpty() || newPass.isEmpty() || confirm.isEmpty()) {
+                Toast.makeText(this, "Không được để trống mật khẩu", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-            SharedPreferences prefs = getSharedPreferences("USER_FILE",MODE_PRIVATE);
-            String username = prefs.getString("username","");
-
+            // 2. Lấy thông tin user hiện tại
+            SharedPreferences prefs = getSharedPreferences("USER_FILE", MODE_PRIVATE);
+            String username = prefs.getString("username", "");
             User user = userDAO.getUserInfo(username);
 
-            if(!oldPass.equals(user.getPassword())){
-                Toast.makeText(this,"Sai mật khẩu cũ",Toast.LENGTH_SHORT).show();
+            if (user == null) return;
+
+            // 3. Kiểm tra mật khẩu cũ (Trim để chính xác)
+            if (!oldPass.equals(user.getPassword())) {
+                Toast.makeText(this, "Mật khẩu cũ không chính xác", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            if(!newPass.equals(confirm)){
-                Toast.makeText(this,"Mật khẩu không khớp",Toast.LENGTH_SHORT).show();
+            // 4. Kiểm tra mật khẩu mới có trùng mật khẩu cũ không
+            if (newPass.equals(oldPass)) {
+                Toast.makeText(this, "Mật khẩu mới không được giống mật khẩu cũ", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            boolean result = userDAO.changePassword(username,newPass);
+            // 5. Kiểm tra mật khẩu mới có khớp xác nhận không
+            if (!newPass.equals(confirm)) {
+                Toast.makeText(this, "Xác nhận mật khẩu không khớp", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-            if(result){
-                Toast.makeText(this,"Đổi mật khẩu thành công",Toast.LENGTH_SHORT).show();
+            // 6. Kiểm tra độ dài mật khẩu (VD: ít nhất 6 ký tự)
+            if (newPass.length() < 6) {
+                Toast.makeText(this, "Mật khẩu phải từ 6 ký tự trở lên", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // 7. Thực hiện đổi
+            if (userDAO.changePassword(username, newPass)) {
+                Toast.makeText(this, "Đổi mật khẩu thành công", Toast.LENGTH_SHORT).show();
                 finish();
+            } else {
+                Toast.makeText(this, "Có lỗi xảy ra, vui lòng thử lại", Toast.LENGTH_SHORT).show();
             }
-
         });
     }
 }

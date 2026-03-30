@@ -1,15 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="10dp"
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#F8F9FA"> <LinearLayout
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
     <TextView
-        android:text="Trang chủ"
-        android:textSize="24sp"
+        android:text="Chào bạn!"
+        android:textSize="14sp"
+        android:textColor="#757575"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:text="Hôm nay mua gì nào? 🍎"
+        android:textSize="22sp"
         android:textStyle="bold"
+        android:textColor="#212121"
+        android:layout_marginBottom="16dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        app:cardCornerRadius="25dp"
+        app:cardElevation="2dp"
+        android:layout_marginBottom="20dp">
+        <LinearLayout
+            android:gravity="center_vertical"
+            android:paddingLeft="15dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <ImageView
+                android:src="@android:drawable/ic_menu_search"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                app:tint="#9E9E9E" />
+            <TextView
+                android:text="Tìm trái cây tươi..."
+                android:layout_marginLeft="10dp"
+                android:textColor="#9E9E9E"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:text="Danh mục"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:layout_marginBottom="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerCategory"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"/>
+
+    <TextView
+        android:text="Gợi ý hôm nay"
+        android:textStyle="bold"
+        android:textSize="18sp"
         android:layout_marginBottom="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
@@ -17,6 +76,6 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerFruit"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
-</LinearLayout>
+        android:layout_height="wrap_content"
+        android:nestedScrollingEnabled="false"/> </LinearLayout>
+</androidx.core.widget.NestedScrollView>

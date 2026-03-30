@@ -3,10 +3,11 @@ package com.example.ungdungbantraicay.Activities;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.widget.*;
-
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.ungdungbantraicay.DAO.UserDAO;
 import com.example.ungdungbantraicay.R;
 
@@ -15,50 +16,57 @@ public class LoginActivity extends AppCompatActivity {
     EditText edtUsername, edtPassword;
     Button btnLogin;
     TextView txtRegister;
-
     UserDAO userDAO;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // 1. KIỂM TRA ĐĂNG NHẬP TỰ ĐỘNG (Auto-login)
+        SharedPreferences pref = getSharedPreferences("USER_FILE", MODE_PRIVATE);
+        String savedUser = pref.getString("username", "");
+        if (!savedUser.isEmpty()) {
+            startActivity(new Intent(this, HomeActivity.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_login);
 
+        // 2. ÁNH XẠ
         edtUsername = findViewById(R.id.edtUsername);
         edtPassword = findViewById(R.id.edtPassword);
         btnLogin = findViewById(R.id.btnLogin);
         txtRegister = findViewById(R.id.txtRegister);
-
         userDAO = new UserDAO(this);
 
-        btnLogin.setOnClickListener(v -> login());
+        // 3. XỬ LÝ SỰ KIỆN
+        btnLogin.setOnClickListener(v -> handleLogin());
 
         txtRegister.setOnClickListener(v -> {
-            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(this, RegisterActivity.class));
         });
     }
 
-    private void login(){
+    private void handleLogin() {
+        String user = edtUsername.getText().toString().trim();
+        String pass = edtPassword.getText().toString().trim();
 
-        String username = edtUsername.getText().toString();
-        String password = edtPassword.getText().toString();
+        if (user.isEmpty() || pass.isEmpty()) {
+            Toast.makeText(this, "Vui lòng nhập đủ tài khoản & mật khẩu", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        if(userDAO.checkLogin(username,password)){
+        if (userDAO.checkLogin(user, pass)) {
+            // LƯU PHIÊN ĐĂNG NHẬP
+            SharedPreferences pref = getSharedPreferences("USER_FILE", MODE_PRIVATE);
+            pref.edit().putString("username", user).apply();
 
-            // LƯU USER ĐANG ĐĂNG NHẬP
-            SharedPreferences preferences = getSharedPreferences("USER_FILE", MODE_PRIVATE);
-            SharedPreferences.Editor editor = preferences.edit();
-            editor.putString("username", username);
-            editor.apply();
-
-            Toast.makeText(this,"Đăng nhập thành công",Toast.LENGTH_SHORT).show();
-
-            Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-            startActivity(intent);
+            Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, HomeActivity.class));
             finish();
-
-        }else{
-            Toast.makeText(this,"Sai tài khoản hoặc mật khẩu",Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Tài khoản hoặc mật khẩu không chính xác", Toast.LENGTH_SHORT).show();
         }
     }
 }

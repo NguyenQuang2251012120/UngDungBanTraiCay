@@ -1,79 +1,99 @@
-<?xml version="1.0" encoding="utf-8"?>
-
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#F8F9FA">
 
     <LinearLayout
         android:orientation="vertical"
         android:padding="20dp"
+        android:gravity="center_horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <TextView
-            android:text="Thông tin người dùng"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="20dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
+        <ImageView
+            android:id="@+id/imgAvatar"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/logo_fruit"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="10dp"
+            android:padding="5dp"
+            android:background="@drawable/edit_text_bg"/>
 
         <TextView
             android:id="@+id/txtUsername"
-            android:textSize="18sp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="username_label"
+            android:textSize="16sp"
+            android:textColor="#757575"
+            android:layout_marginBottom="5dp"/>
 
         <TextView
-            android:id="@+id/txtFullname"
-            android:textSize="18sp"
-            android:layout_width="match_parent"
+            android:id="@+id/txtProfileTitle"
+            android:text="Hồ sơ của tôi"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#2E7D32"
+            android:layout_marginBottom="30dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <TextView
-            android:id="@+id/txtEmail"
-            android:textSize="18sp"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/edit_text_bg"
+            android:padding="15dp"
+            android:layout_marginBottom="20dp">
 
-        <TextView
-            android:id="@+id/txtPhone"
-            android:textSize="18sp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Họ và tên" android:textSize="12sp" android:textColor="#757575"/>
+            <TextView android:id="@+id/txtFullname" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="17sp" android:textStyle="bold" android:textColor="#212121"/>
 
-        <TextView
-            android:id="@+id/txtAddress"
-            android:textSize="18sp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E0E0E0" android:layout_marginVertical="10dp"/>
 
-        <!-- BUTTONS -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Email" android:textSize="12sp" android:textColor="#757575"/>
+            <TextView android:id="@+id/txtEmail" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="17sp" android:textColor="#212121"/>
 
-        <Button
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E0E0E0" android:layout_marginVertical="10dp"/>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Số điện thoại" android:textSize="12sp" android:textColor="#757575"/>
+            <TextView android:id="@+id/txtPhone" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="17sp" android:textColor="#212121"/>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E0E0E0" android:layout_marginVertical="10dp"/>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Địa chỉ" android:textSize="12sp" android:textColor="#757575"/>
+            <TextView android:id="@+id/txtAddress" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="17sp" android:textColor="#212121"/>
+        </LinearLayout>
+
+        <android.widget.Button
             android:id="@+id/btnEditProfile"
-            android:text="Sửa thông tin"
-            android:layout_marginTop="20dp"
+            android:text="Chỉnh sửa thông tin"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_bg"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="50dp"
+            android:textAllCaps="false"
+            android:layout_marginBottom="10dp"/>
 
-        <Button
+        <android.widget.Button
             android:id="@+id/btnChangePassword"
             android:text="Đổi mật khẩu"
-            android:layout_marginTop="10dp"
+            android:textColor="#4CAF50"
+            android:background="@android:color/transparent"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="50dp"
+            android:textAllCaps="false"
+            android:layout_marginBottom="10dp"/>
 
-        <Button
+        <android.widget.Button
             android:id="@+id/btnLogout"
             android:text="Đăng xuất"
-            android:layout_marginTop="10dp"
-            android:backgroundTint="#F44336"
-            android:textColor="#FFFFFF"
+            android:textColor="#F44336"
+            android:background="@android:color/transparent"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="50dp"
+            android:textAllCaps="false"/>
 
     </LinearLayout>
-
 </ScrollView>

@@ -1,6 +1,8 @@
 package com.example.ungdungbantraicay.Model;
 
-public class OrderItem {
+import java.io.Serializable;
+
+public class OrderItem implements Serializable {
 
     private int id;
     private int orderId;

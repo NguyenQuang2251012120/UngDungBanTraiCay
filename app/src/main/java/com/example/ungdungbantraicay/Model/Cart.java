@@ -1,6 +1,8 @@
 package com.example.ungdungbantraicay.Model;
 
-public class Cart {
+import java.io.Serializable;
+
+public class Cart implements Serializable {
 
     private int id;
     private int userId;

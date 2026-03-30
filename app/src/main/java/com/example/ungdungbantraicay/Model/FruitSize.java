@@ -1,6 +1,8 @@
 package com.example.ungdungbantraicay.Model;
 
-public class FruitSize {
+import java.io.Serializable;
+
+public class FruitSize implements Serializable {
 
     private int id;
     private int fruitId;
