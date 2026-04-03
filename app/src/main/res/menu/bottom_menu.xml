@@ -8,7 +8,7 @@
 
     <item
         android:id="@+id/menu_search"
-        android:title="Sản phẩm"
+        android:title="Tìm kiếm"
         android:icon="@drawable/ic_search"/>
 
     <item

@@ -58,9 +58,15 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         if (userDAO.checkLogin(user, pass)) {
+            // Lấy ID từ database trước khi lưu vào Pref
+            int userId = userDAO.getUserIdByUsername(user);
+
             // LƯU PHIÊN ĐĂNG NHẬP
             SharedPreferences pref = getSharedPreferences("USER_FILE", MODE_PRIVATE);
-            pref.edit().putString("username", user).apply();
+            SharedPreferences.Editor editor = pref.edit();
+            editor.putString("username", user);
+            editor.putInt("userId", userId); // LƯU THÊM DÒNG NÀY
+            editor.apply();
 
             Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(this, HomeActivity.class));

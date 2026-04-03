@@ -7,6 +7,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.ungdungbantraicay.DAO.UserDAO;
+import com.example.ungdungbantraicay.Model.User;
 import com.example.ungdungbantraicay.R;
 
 public class RegisterActivity extends AppCompatActivity {
@@ -67,16 +68,27 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        // 3. KIỂM TRA TRÙNG USERNAME TRONG DATABASE
+// 3. KIỂM TRA TRÙNG USERNAME TRONG DATABASE
         if (userDAO.checkUsername(user)) {
             Toast.makeText(this, "Tên đăng nhập đã tồn tại!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 4. THỰC HIỆN ĐĂNG KÝ (Sử dụng DAO đã có)
-        userDAO.insertUser(user, pass, full, email, phone, addr);
+        // 4. THỰC HIỆN ĐĂNG KÝ (Gom vào Object User)
+        User newUser = new User();
+        newUser.setUsername(user);
+        newUser.setPassword(pass);
+        newUser.setFullname(full);
+        newUser.setEmail(email);
+        newUser.setPhone(phone);
+        newUser.setAddress(addr);
 
-        Toast.makeText(this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
-        finish(); // Quay lại màn hình Login
+        // Gọi DAO truyền Object vào
+        if (userDAO.insertUser(newUser)) {
+            Toast.makeText(this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
+            finish(); // Quay lại màn hình Login
+        } else {
+            Toast.makeText(this, "Đăng ký thất bại, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
+        }
     }
 }

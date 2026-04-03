@@ -1,23 +1,28 @@
 package com.example.ungdungbantraicay.DAO;
 
+import android.content.ContentValues;
 import android.content.Context;
-
+import android.database.sqlite.SQLiteDatabase;
 import com.example.ungdungbantraicay.Helper.DBHelper;
+import com.example.ungdungbantraicay.Model.Order;
 
 public class OrderDAO {
-
-    DBHelper db;
+    private SQLiteDatabase database;
+    private DBHelper dbHelper;
 
     public OrderDAO(Context context) {
-        db = new DBHelper(context);
+        dbHelper = new DBHelper(context);
+        database = dbHelper.getWritableDatabase();
     }
 
-    public void createOrder(int userId, int totalPrice, String date) {
+    public long createOrder(Order order) {
+        ContentValues values = new ContentValues();
+        values.put("user_id", order.getUserId());
+        values.put("total_price", order.getTotalPrice());
+        values.put("status", order.getStatus()); // Ví dụ: "Pending"
+        values.put("created_at", order.getCreatedAt());
 
-        String sql = "INSERT INTO Orders(user_id,total_price,status,created_at) VALUES(" +
-                userId + "," + totalPrice + ",'Pending','" + date + "')";
-
-        db.executeSQL(sql);
+        // Trả về ID của đơn hàng vừa tạo (rất quan trọng để lưu OrderItem sau đó)
+        return database.insert("Orders", null, values);
     }
-
 }

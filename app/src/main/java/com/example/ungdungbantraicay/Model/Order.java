@@ -7,12 +7,12 @@ public class Order implements Serializable {
     private int id;
     private int userId;
     private int totalPrice;
-    private String status;
+    private int status;
     private String createdAt;
 
     public Order() {}
 
-    public Order(int id, int userId, int totalPrice, String status, String createdAt) {
+    public Order(int id, int userId, int totalPrice, int status, String createdAt) {
         this.id = id;
         this.userId = userId;
         this.totalPrice = totalPrice;
@@ -32,9 +32,9 @@ public class Order implements Serializable {
 
     public void setTotalPrice(int totalPrice) { this.totalPrice = totalPrice; }
 
-    public String getStatus() { return status; }
+    public int getStatus() { return status; }
 
-    public void setStatus(String status) { this.status = status; }
+    public void setStatus(int status) { this.status = status; }
 
     public String getCreatedAt() { return createdAt; }
 

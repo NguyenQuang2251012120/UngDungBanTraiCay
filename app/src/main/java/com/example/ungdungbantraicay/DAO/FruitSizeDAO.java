@@ -2,40 +2,40 @@ package com.example.ungdungbantraicay.DAO;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 
 import com.example.ungdungbantraicay.Helper.DBHelper;
 import com.example.ungdungbantraicay.Model.FruitSize;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class FruitSizeDAO {
-
-    DBHelper db;
+    private SQLiteDatabase database;
+    private DBHelper dbHelper;
 
     public FruitSizeDAO(Context context) {
-        db = new DBHelper(context);
+        dbHelper = new DBHelper(context);
+        database = dbHelper.getWritableDatabase();
     }
 
-    public ArrayList<FruitSize> getSizeByFruitId(int fruitId){
+    public List<FruitSize> getSizesByFruitId(int fruitId) {
+        List<FruitSize> list = new ArrayList<>();
+        String selection = DBHelper.COL_SIZE_FRUIT_ID + " = ?";
+        String[] args = {String.valueOf(fruitId)};
 
-        ArrayList<FruitSize> list = new ArrayList<>();
+        Cursor cursor = database.query(DBHelper.TABLE_FRUIT_SIZE, null, selection, args, null, null, null);
 
-        Cursor cursor = db.getData(
-                "SELECT * FROM FruitSize WHERE fruit_id=" + fruitId
-        );
-
-        while(cursor.moveToNext()){
-
-            FruitSize size = new FruitSize();
-
-            size.setId(cursor.getInt(0));
-            size.setFruitId(cursor.getInt(1));
-            size.setSize(cursor.getString(2));
-            size.setPrice(cursor.getInt(3));
-
-            list.add(size);
+        if (cursor.moveToFirst()) {
+            do {
+                FruitSize s = new FruitSize();
+                s.setId(cursor.getInt(cursor.getColumnIndex(DBHelper.COL_SIZE_ID)));
+                s.setSize(cursor.getString(cursor.getColumnIndex(DBHelper.COL_SIZE_NAME)));
+                s.setPrice(cursor.getInt(cursor.getColumnIndex(DBHelper.COL_SIZE_PRICE)));
+                list.add(s);
+            } while (cursor.moveToNext());
         }
-
+        cursor.close();
         return list;
     }
 }

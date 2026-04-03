@@ -41,10 +41,16 @@ public class FruitAdapter extends RecyclerView.Adapter<FruitAdapter.ViewHolder> 
         Fruit fruit = list.get(position);
         holder.tvName.setText(fruit.getName());
 
+        // Hiển thị ảnh
         int resId = context.getResources().getIdentifier(fruit.getImage(), "drawable", context.getPackageName());
         holder.imgFruit.setImageResource(resId);
 
-        // 3. Thay vì viết Intent ở đây, ta gọi listener
+        // --- PHẦN SỬA: Hiển thị Rating ---
+        float rating = fruit.getAverageRating();
+        holder.ratingBar.setRating(rating);
+        holder.tvRatingValue.setText(String.format("%.1f", rating));
+
+        // Click listener giữ nguyên
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onFruitClick(fruit);
@@ -59,11 +65,17 @@ public class FruitAdapter extends RecyclerView.Adapter<FruitAdapter.ViewHolder> 
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imgFruit;
-        TextView tvName;
+        TextView tvName, tvRatingValue; // Thêm tvRatingValue
+        android.widget.RatingBar ratingBar; // Thêm RatingBar
+
         public ViewHolder(View itemView) {
             super(itemView);
             imgFruit = itemView.findViewById(R.id.imgFruit);
             tvName = itemView.findViewById(R.id.tvFruitName);
+
+            // Ánh xạ các View rating mới từ item_fruit.xml
+            ratingBar = itemView.findViewById(R.id.ratingBarFruit);
+            tvRatingValue = itemView.findViewById(R.id.tvRatingValue);
         }
     }
 }
