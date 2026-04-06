@@ -11,6 +11,7 @@ public class Fruit implements Serializable {
     private int categoryId;
     private int status; // 1: Còn hàng, 0: Hết hàng
     private float averageRating;
+    private int minPrice; // Thêm thuộc tính này
 
     public Fruit() {
     }
@@ -47,4 +48,6 @@ public class Fruit implements Serializable {
 
     public float getAverageRating() { return averageRating; }
     public void setAverageRating(float averageRating) { this.averageRating = averageRating; }
+    public int getMinPrice() { return minPrice; }
+    public void setMinPrice(int minPrice) { this.minPrice = minPrice; }
 }

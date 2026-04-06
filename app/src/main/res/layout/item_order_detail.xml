@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/imgOrderDetail"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/apple" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvOrderDetailName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tên trái cây"
+            android:textStyle="bold"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tvOrderDetailSizeQty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Size: L | SL: 2"
+            android:textColor="#666666" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvOrderDetailPrice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:text="100,000 VND"
+        android:textColor="#FF5722"
+        android:textStyle="bold" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnReviewItem"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Đánh giá"
+        android:textColor="#FF4500"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
+</LinearLayout>

@@ -40,61 +40,63 @@ public class FruitSizeAdapter extends RecyclerView.Adapter<FruitSizeAdapter.View
         return new ViewHolder(view);
     }
 
+
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         FruitSize fruitSize = list.get(position);
+        boolean isAvailable = fruitSize.getStatus() == 1;
 
-        // 1. Gán dữ liệu cơ bản
         holder.tvSize.setText(fruitSize.getSize());
         holder.tvPrice.setText(String.format("%,d VND", fruitSize.getPrice()));
         holder.tvQuantity.setText(String.valueOf(fruitSize.getQuantity()));
 
-        // 2. Xử lý Logic Tăng/Giảm số lượng
-        holder.btnPlus.setOnClickListener(v -> {
-            fruitSize.setQuantity(fruitSize.getQuantity() + 1);
-            notifyItemChanged(position);
-            // Cập nhật lại giá tiền ở Activity nếu size này đang được chọn
-            if (selectedPosition == position && listener != null) {
-                listener.onSizeClick(fruitSize);
-            }
-        });
-
-        holder.btnMinus.setOnClickListener(v -> {
-            if (fruitSize.getQuantity() > 1) {
-                fruitSize.setQuantity(fruitSize.getQuantity() - 1);
-                notifyItemChanged(position);
-                if (selectedPosition == position && listener != null) {
-                    listener.onSizeClick(fruitSize);
-                }
-            }
-        });
-
-        // 3. Xử lý chọn Item (Highlight)
-        if (selectedPosition == position) {
-            holder.itemView.setBackgroundResource(R.drawable.bg_size_selected);
-            holder.tvSize.setTextColor(Color.WHITE);
-            holder.tvPrice.setTextColor(Color.WHITE);
-            holder.tvQuantity.setTextColor(Color.WHITE);
+        // 1. Xử lý hiển thị dựa trên Trạng thái (Còn/Hết)
+        if (!isAvailable) {
+            holder.itemView.setAlpha(0.4f); // Làm mờ
+            holder.btnPlus.setEnabled(false);
+            holder.btnMinus.setEnabled(false);
         } else {
-            holder.itemView.setBackgroundResource(R.drawable.bg_size_unselected);
-            holder.tvSize.setTextColor(Color.BLACK);
-            holder.tvPrice.setTextColor(Color.GRAY);
-            holder.tvQuantity.setTextColor(Color.BLACK);
+            holder.itemView.setAlpha(1.0f); // Hiện rõ
+            holder.btnPlus.setEnabled(true);
+            holder.btnMinus.setEnabled(true);
         }
 
-        // 4. Sự kiện Click chọn Size
+        // 2. Logic Tăng/Giảm (chỉ chạy nếu còn hàng)
+        if (isAvailable) {
+            holder.btnPlus.setOnClickListener(v -> {
+                fruitSize.setQuantity(fruitSize.getQuantity() + 1);
+                notifyItemChanged(position);
+                if (selectedPosition == position) listener.onSizeClick(fruitSize);
+            });
+
+            holder.btnMinus.setOnClickListener(v -> {
+                if (fruitSize.getQuantity() > 1) {
+                    fruitSize.setQuantity(fruitSize.getQuantity() - 1);
+                    notifyItemChanged(position);
+                    if (selectedPosition == position) listener.onSizeClick(fruitSize);
+                }
+            });
+        }
+
+        // 3. Highlight chọn Size
+        if (selectedPosition == position) {
+            holder.itemView.setBackgroundResource(R.drawable.bg_size_selected);
+            // ... set màu chữ trắng ...
+        } else {
+            holder.itemView.setBackgroundResource(R.drawable.bg_size_unselected);
+            // ... set màu chữ đen/xám ...
+        }
+
+        // 4. Click chọn Size (Vẫn cho click để xem thông báo hết hàng)
         holder.itemView.setOnClickListener(v -> {
             int oldPos = selectedPosition;
             selectedPosition = holder.getAdapterPosition();
             notifyItemChanged(oldPos);
             notifyItemChanged(selectedPosition);
 
-            if (listener != null) {
-                listener.onSizeClick(fruitSize);
-            }
+            if (listener != null) listener.onSizeClick(fruitSize);
         });
     }
-
     @Override
     public int getItemCount() {
         return (list != null) ? list.size() : 0;
@@ -119,5 +121,9 @@ public class FruitSizeAdapter extends RecyclerView.Adapter<FruitSizeAdapter.View
             btnPlus = itemView.findViewById(R.id.btnPlus);
             btnMinus = itemView.findViewById(R.id.btnMinus);
         }
+    }
+
+    public void setSelectedPosition(int position) {
+        this.selectedPosition = position;
     }
 }

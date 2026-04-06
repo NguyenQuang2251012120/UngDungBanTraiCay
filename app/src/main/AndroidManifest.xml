@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.UngDungBanTraiCay">
         <activity
+            android:name=".Activities.OrderDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".Activities.FruitDetailActivity"
             android:exported="false" />
         <activity

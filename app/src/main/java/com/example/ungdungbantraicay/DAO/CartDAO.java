@@ -7,6 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 import com.example.ungdungbantraicay.Helper.DBHelper;
 import com.example.ungdungbantraicay.Model.CartItem;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CartDAO {
     private SQLiteDatabase database;
     private DBHelper dbHelper;
@@ -33,6 +36,7 @@ public class CartDAO {
         cursor.close();
         return cartId;
     }
+
 
     // --- HÀM CỦA BẠN: Có thêm một chút cải tiến về hiệu suất ---
     public void addToCart(CartItem item) {
@@ -63,5 +67,46 @@ public class CartDAO {
         }
 
         if (cursor != null) cursor.close();
+    }
+
+    public List<CartItem> getItemsByUserId(int userId) {
+        List<CartItem> list = new ArrayList<>();
+        String sql = "SELECT ci.*, f.name, f.image, fs.size, fs.price " +
+                "FROM CartItem ci " +
+                "JOIN Cart c ON ci.cart_id = c.id " +
+                "JOIN FruitSize fs ON ci.fruit_size_id = fs.id " +
+                "JOIN Fruit f ON fs.fruit_id = f.id " +
+                "WHERE c.user_id = ?";
+
+        Cursor cursor = database.rawQuery(sql, new String[]{String.valueOf(userId)});
+        if (cursor.moveToFirst()) {
+            do {
+                CartItem item = new CartItem();
+                item.setId(cursor.getInt(0));
+                item.setCartId(cursor.getInt(1));
+                item.setFruitSizeId(cursor.getInt(2));
+                item.setQuantity(cursor.getInt(3));
+
+                // Lấy dữ liệu từ các bảng JOIN
+                item.setFruitName(cursor.getString(4));
+                item.setFruitImage(cursor.getString(5));
+                item.setSizeName(cursor.getString(6));
+                item.setPrice(cursor.getInt(7));
+
+                list.add(item);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return list;
+    }
+
+    public void updateQuantity(int itemId, int newQty) {
+        ContentValues values = new ContentValues();
+        values.put(DBHelper.COL_CI_QUANTITY, newQty);
+        database.update(DBHelper.TABLE_CART_ITEM, values, "id = ?", new String[]{String.valueOf(itemId)});
+    }
+
+    public void deleteItem(int itemId) {
+        database.delete(DBHelper.TABLE_CART_ITEM, "id = ?", new String[]{String.valueOf(itemId)});
     }
 }

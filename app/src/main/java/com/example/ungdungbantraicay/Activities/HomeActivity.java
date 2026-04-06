@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.ungdungbantraicay.Fragments.CartFragment;
 import com.example.ungdungbantraicay.Fragments.HomeFragment;
+import com.example.ungdungbantraicay.Fragments.OrderFragment;
 import com.example.ungdungbantraicay.Fragments.ProductFragment;
 import com.example.ungdungbantraicay.Fragments.ProfileFragment;
 import com.example.ungdungbantraicay.R;
@@ -42,6 +43,9 @@ public class HomeActivity extends AppCompatActivity {
                 fragment = new CartFragment();
             }
 
+            else if(item.getItemId() == R.id.menu_order){
+                fragment = new OrderFragment();
+            }
             else if(item.getItemId() == R.id.menu_profile){
                 fragment = new ProfileFragment();
             }

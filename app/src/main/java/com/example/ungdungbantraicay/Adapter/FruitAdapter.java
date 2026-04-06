@@ -1,6 +1,7 @@
 package com.example.ungdungbantraicay.Adapter;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,16 +46,29 @@ public class FruitAdapter extends RecyclerView.Adapter<FruitAdapter.ViewHolder> 
         int resId = context.getResources().getIdentifier(fruit.getImage(), "drawable", context.getPackageName());
         holder.imgFruit.setImageResource(resId);
 
-        // --- PHẦN SỬA: Hiển thị Rating ---
+        // Hiển thị Rating
         float rating = fruit.getAverageRating();
         holder.ratingBar.setRating(rating);
         holder.tvRatingValue.setText(String.format("%.1f", rating));
 
-        // Click listener giữ nguyên
+        // --- PHẦN SỬA: Hiển thị Giá tiền ---
+        if (fruit.getMinPrice() > 0) {
+            holder.tvPrice.setText(String.format("Từ %,dđ", fruit.getMinPrice()));
+        } else {
+            holder.tvPrice.setText("Liên hệ");
+        }
+        if (fruit.getStatus() == 1) {
+            holder.tvStatus.setText("Còn hàng");
+            holder.tvStatus.setTextColor(Color.parseColor("#4CAF50")); // Màu xanh
+            holder.itemView.setAlpha(1.0f); // Hiện rõ
+        } else {
+            holder.tvStatus.setText("Hết hàng");
+            holder.tvStatus.setTextColor(Color.RED); // Màu đỏ
+            holder.itemView.setAlpha(0.6f); // Làm mờ item đi một chút để báo hiệu hết hàng
+        }
+
         holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onFruitClick(fruit);
-            }
+            if (listener != null) listener.onFruitClick(fruit);
         });
     }
 
@@ -65,17 +79,20 @@ public class FruitAdapter extends RecyclerView.Adapter<FruitAdapter.ViewHolder> 
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imgFruit;
-        TextView tvName, tvRatingValue; // Thêm tvRatingValue
-        android.widget.RatingBar ratingBar; // Thêm RatingBar
+        TextView tvName, tvRatingValue, tvPrice; // Thêm tvPrice
+        android.widget.RatingBar ratingBar;
+        TextView tvStatus;
+
 
         public ViewHolder(View itemView) {
             super(itemView);
             imgFruit = itemView.findViewById(R.id.imgFruit);
             tvName = itemView.findViewById(R.id.tvFruitName);
-
-            // Ánh xạ các View rating mới từ item_fruit.xml
             ratingBar = itemView.findViewById(R.id.ratingBarFruit);
             tvRatingValue = itemView.findViewById(R.id.tvRatingValue);
+            // --- ÁNH XẠ GIÁ TIỀN ---
+            tvPrice = itemView.findViewById(R.id.tvFruitPrice);
+            tvStatus = itemView.findViewById(R.id.tvFruitStatus);
         }
     }
 }

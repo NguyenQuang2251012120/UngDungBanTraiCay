@@ -18,12 +18,13 @@ public class FruitDAO {
         database = dbHelper.getWritableDatabase();
     }
 
-    // Lấy toàn bộ trái cây
+    // --- 1. Lấy toàn bộ trái cây ---
     public List<Fruit> getAllFruits() {
         List<Fruit> list = new ArrayList<>();
-        // Câu lệnh SQL lấy tất cả cột của Fruit và cộng thêm 1 cột ảo là avg_rating từ bảng Review
+        // TỐI ƯU: Chỉ lấy giá MIN của những size còn hàng (status = 1)
         String query = "SELECT f.*, " +
-                "(SELECT AVG(rating) FROM Review WHERE fruit_id = f.id) as avg_rating " +
+                "(SELECT AVG(rating) FROM Review WHERE fruit_id = f.id) as avg_rating, " +
+                "(SELECT MIN(price) FROM FruitSize WHERE fruit_id = f.id AND status = 1) as min_price " +
                 "FROM " + DBHelper.TABLE_FRUIT + " f";
 
         Cursor cursor = database.rawQuery(query, null);
@@ -36,11 +37,13 @@ public class FruitDAO {
         return list;
     }
 
-    // --- HÀM MỚI: Lấy trái cây theo danh mục ---
+    // --- 2. Lấy trái cây theo Category ---
     public List<Fruit> getFruitsByCategory(int categoryId) {
         List<Fruit> list = new ArrayList<>();
+        // TỐI ƯU: Chỉ lấy giá MIN của những size còn hàng (status = 1)
         String query = "SELECT f.*, " +
-                "(SELECT AVG(rating) FROM Review WHERE fruit_id = f.id) as avg_rating " +
+                "(SELECT AVG(rating) FROM Review WHERE fruit_id = f.id) as avg_rating, " +
+                "(SELECT MIN(price) FROM FruitSize WHERE fruit_id = f.id AND status = 1) as min_price " +
                 "FROM " + DBHelper.TABLE_FRUIT + " f " +
                 "WHERE f." + DBHelper.COL_FRUIT_CAT_ID + " = ?";
 
@@ -54,7 +57,44 @@ public class FruitDAO {
         return list;
     }
 
-    // Hàm phụ để tránh lặp code (Helper method)
+    // --- 3. Hàm tìm kiếm và lọc nâng cao ---
+    public List<Fruit> searchFruits(String query, int categoryId, String sortType) {
+        List<Fruit> list = new ArrayList<>();
+
+        // TỐI ƯU: Subquery giá MIN chỉ xét các size có status = 1
+        String sql = "SELECT f.*, " +
+                "(SELECT AVG(rating) FROM Review WHERE fruit_id = f.id) as avg_rating, " +
+                "(SELECT MIN(price) FROM FruitSize WHERE fruit_id = f.id AND status = 1) as min_price " +
+                "FROM Fruit f " +
+                "WHERE f.name LIKE ?";
+
+        List<String> args = new ArrayList<>();
+        args.add("%" + query + "%");
+
+        if (categoryId > 0) {
+            sql += " AND f.category_id = ?";
+            args.add(String.valueOf(categoryId));
+        }
+
+        // Sắp xếp dựa trên min_price đã lọc status = 1
+        if (sortType.equals("PRICE_ASC")) {
+            sql += " ORDER BY min_price ASC";
+        } else if (sortType.equals("PRICE_DESC")) {
+            sql += " ORDER BY min_price DESC";
+        } else if (sortType.equals("RATING")) {
+            sql += " ORDER BY avg_rating DESC";
+        }
+
+        Cursor cursor = database.rawQuery(sql, args.toArray(new String[0]));
+        if (cursor.moveToFirst()) {
+            do {
+                list.add(cursorToFruit(cursor));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return list;
+    }
+
     private Fruit cursorToFruit(Cursor cursor) {
         Fruit f = new Fruit();
         f.setId(cursor.getInt(cursor.getColumnIndex(DBHelper.COL_FRUIT_ID)));
@@ -64,15 +104,18 @@ public class FruitDAO {
         f.setCategoryId(cursor.getInt(cursor.getColumnIndex(DBHelper.COL_FRUIT_CAT_ID)));
         f.setStatus(cursor.getInt(cursor.getColumnIndex(DBHelper.COL_FRUIT_STATUS)));
 
-        // LẤY ĐIỂM SAO: Cột avg_rating nằm ở vị trí cuối cùng trong câu SELECT trên
+        // Lấy Rating
         int ratingIndex = cursor.getColumnIndex("avg_rating");
-        if (ratingIndex != -1) {
-            f.setAverageRating(cursor.getFloat(ratingIndex));
+        if (ratingIndex != -1) f.setAverageRating(cursor.getFloat(ratingIndex));
+
+        // Lấy giá thấp nhất (Đã được lọc size còn hàng từ SQL)
+        int priceIndex = cursor.getColumnIndex("min_price");
+        if (priceIndex != -1) {
+            f.setMinPrice(cursor.getInt(priceIndex));
         }
 
         return f;
     }
-
 
     public void updateFruit(Fruit fruit) {
         ContentValues values = new ContentValues();

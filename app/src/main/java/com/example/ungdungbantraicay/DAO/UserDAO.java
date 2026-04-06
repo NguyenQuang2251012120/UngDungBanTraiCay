@@ -100,4 +100,14 @@ public class UserDAO {
         cursor.close();
         return id;
     }
+
+    public String getAddressByUserId(int userId) {
+        String address = "";
+        Cursor cursor = database.rawQuery("SELECT address FROM User WHERE id = ?", new String[]{String.valueOf(userId)});
+        if (cursor.moveToFirst()) {
+            address = cursor.getString(0);
+        }
+        cursor.close();
+        return address;
+    }
 }

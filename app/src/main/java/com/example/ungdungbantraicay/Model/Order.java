@@ -8,15 +8,18 @@ public class Order implements Serializable {
     private int userId;
     private int totalPrice;
     private int status;
+    private String address;
     private String createdAt;
+
 
     public Order() {}
 
-    public Order(int id, int userId, int totalPrice, int status, String createdAt) {
+    public Order(int id, int userId, int totalPrice, int status, String address, String createdAt) {
         this.id = id;
         this.userId = userId;
         this.totalPrice = totalPrice;
         this.status = status;
+        this.address = address;
         this.createdAt = createdAt;
     }
 
@@ -35,8 +38,13 @@ public class Order implements Serializable {
     public int getStatus() { return status; }
 
     public void setStatus(int status) { this.status = status; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 
     public String getCreatedAt() { return createdAt; }
 
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+
+
 }

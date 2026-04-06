@@ -17,6 +17,12 @@
         android:icon="@drawable/ic_cart"/>
 
     <item
+        android:id="@+id/menu_order"
+        android:title="Hóa đơn"
+        android:icon="@drawable/ic_order"/>
+
+
+    <item
         android:id="@+id/menu_profile"
         android:title="Tài khoản"
         android:icon="@drawable/ic_user"/>

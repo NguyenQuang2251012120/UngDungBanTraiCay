@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -19,7 +20,7 @@
             android:layout_height="wrap_content"
             android:text="Tên khách hàng"
             android:textStyle="bold"
-            android:textColor="@android:color/black"/>
+            android:textColor="@android:color/black" />
 
         <RatingBar
             android:id="@+id/ratingBarItem"
@@ -28,6 +29,25 @@
             android:layout_height="wrap_content"
             android:numStars="5"
             android:isIndicator="true" />
+
+        <ImageView
+            android:id="@+id/imgDeleteReview"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/ic_delete"
+            android:visibility="gone"
+            android:contentDescription="Xóa đánh giá"
+            app:tint="#FF0000" />
+        <ImageView
+            android:id="@+id/imgEditReview"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_toStartOf="@id/imgDeleteReview"
+            android:layout_marginEnd="10dp"
+            android:src="@drawable/ic_edit"
+            android:visibility="gone"
+            app:tint="#4CAF50" />
     </LinearLayout>
 
     <TextView

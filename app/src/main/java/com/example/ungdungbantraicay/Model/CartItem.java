@@ -8,6 +8,10 @@ public class CartItem implements Serializable {
     private int cartId;
     private int fruitSizeId;
     private int quantity;
+    private String fruitName;
+    private String fruitImage;
+    private String sizeName;
+    private int price;
 
     public CartItem() {}
 
@@ -33,4 +37,12 @@ public class CartItem implements Serializable {
     public int getQuantity() { return quantity; }
 
     public void setQuantity(int quantity) { this.quantity = quantity; }
+    public String getFruitName() { return fruitName; }
+    public void setFruitName(String fruitName) { this.fruitName = fruitName; }
+    public String getFruitImage() { return fruitImage; }
+    public void setFruitImage(String fruitImage) { this.fruitImage = fruitImage; }
+    public String getSizeName() { return sizeName; }
+    public void setSizeName(String sizeName) { this.sizeName = sizeName; }
+    public int getPrice() { return price; }
+    public void setPrice(int price) { this.price = price; }
 }

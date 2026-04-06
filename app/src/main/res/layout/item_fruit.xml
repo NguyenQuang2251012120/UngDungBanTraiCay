@@ -33,6 +33,19 @@
             android:maxLines="1"
             android:ellipsize="end"/>
 
+        <TextView
+            android:id="@+id/tvFruitStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Còn hàng"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="2dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/bg_status_available"
+            android:textColor="#4CAF50"/>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

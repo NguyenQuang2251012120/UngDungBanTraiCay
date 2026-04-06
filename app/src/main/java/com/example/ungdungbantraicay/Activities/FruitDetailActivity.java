@@ -2,11 +2,15 @@ package com.example.ungdungbantraicay.Activities;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,18 +35,19 @@ import java.util.List;
 public class FruitDetailActivity extends AppCompatActivity {
 
     private ImageView imgFruit;
-    private TextView tvName, tvDescription, tvCategory, tvFruitPrice, tvAverageRating;
+    private TextView tvName, tvDescription, tvCategory, tvFruitPrice, tvAverageRating, tvStatusDetail;
     private RatingBar ratingBarMain;
     private RecyclerView recyclerSize, recyclerReviews;
-    private MaterialButton btnAddToCart; // Thêm nút này
+    private MaterialButton btnAddToCart, btnWriteReview;
 
+    private int currentFruitId;
     private FruitSizeDAO fruitSizeDAO;
     private CategoryDAO categoryDAO;
     private ReviewDAO reviewDAO;
-    private CartDAO cartDAO; // Thêm CartDAO
+    private CartDAO cartDAO;
 
     private int currentUserId;
-    private int selectedSizeId = -1; // Biến lưu size đang được chọn
+    private int selectedSizeId = -1;
 
     private FruitSizeAdapter sizeAdapter;
     private ReviewAdapter reviewAdapter;
@@ -57,22 +62,22 @@ public class FruitDetailActivity extends AppCompatActivity {
 
         initViews();
 
-        // --- 2. Nhận dữ liệu từ Intent ---
-        // Khởi tạo CartDAO
         cartDAO = new CartDAO(this);
+        fruitSizeDAO = new FruitSizeDAO(this);
+        categoryDAO = new CategoryDAO(this);
+        reviewDAO = new ReviewDAO(this);
 
         Fruit fruit = (Fruit) getIntent().getSerializableExtra("fruit_item");
 
         if (fruit != null) {
-            fruitSizeDAO = new FruitSizeDAO(this);
-            categoryDAO = new CategoryDAO(this);
-            reviewDAO = new ReviewDAO(this);
-
+            currentFruitId = fruit.getId();
             displayFruitInfo(fruit);
             loadReviewData(fruit.getId());
             loadSizeData(fruit.getId());
 
-            // Xử lý sự kiện click Thêm Giỏ
+            // Bước 1: Kiểm tra quyền đánh giá ngay khi vào màn hình
+            checkReviewEligibility(fruit.getId());
+
             btnAddToCart.setOnClickListener(v -> {
                 if (currentUserId == -1) {
                     Toast.makeText(this, "Vui lòng đăng nhập trước!", Toast.LENGTH_SHORT).show();
@@ -80,6 +85,8 @@ public class FruitDetailActivity extends AppCompatActivity {
                     handleAddToCart();
                 }
             });
+
+            btnWriteReview.setOnClickListener(v -> showReviewDialog(fruit.getId()));
         }
     }
 
@@ -93,86 +100,153 @@ public class FruitDetailActivity extends AppCompatActivity {
         recyclerReviews = findViewById(R.id.recyclerReviews);
         ratingBarMain = findViewById(R.id.ratingBarMain);
         tvAverageRating = findViewById(R.id.tvAverageRating);
-
-        // Ánh xạ nút Thêm Giỏ (Nhớ đặt ID trong XML là btnAddToCart)
+        tvStatusDetail = findViewById(R.id.tvStatusDetail);
         btnAddToCart = findViewById(R.id.btnAddToCart);
+        btnWriteReview = findViewById(R.id.btnWriteReview);
+    }
+
+    // TÍCH HỢP: Kiểm tra điều kiện hiện nút Đánh giá
+    public void checkReviewEligibility(int fruitId) {
+        if (currentUserId == -1) {
+            btnWriteReview.setVisibility(View.GONE);
+            return;
+        }
+
+        // Đã mua + Đã nhận (Status 3) VÀ Chưa đánh giá trái cây này
+        boolean purchased = reviewDAO.canUserReview(currentUserId, fruitId);
+        boolean alreadyReviewed = reviewDAO.isAlreadyReviewed(currentUserId, fruitId);
+
+        if (purchased && !alreadyReviewed) {
+            btnWriteReview.setVisibility(View.VISIBLE);
+        } else {
+            btnWriteReview.setVisibility(View.GONE);
+        }
+    }
+
+    // TÍCH HỢP: Dialog nhập liệu chuyên nghiệp
+    private void showReviewDialog(int fruitId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_review, null);
+        builder.setView(dialogView);
+
+        RatingBar rbReview = dialogView.findViewById(R.id.rbReview);
+        EditText edtComment = dialogView.findViewById(R.id.edtReviewComment);
+
+        builder.setTitle("Đánh giá sản phẩm");
+        builder.setPositiveButton("Gửi", (dialog, which) -> {
+            float rating = rbReview.getRating();
+            String comment = edtComment.getText().toString().trim();
+
+            if (rating == 0) {
+                Toast.makeText(this, "Vui lòng chọn số sao!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Review newReview = new Review();
+            newReview.setUserId(currentUserId);
+            newReview.setFruitId(fruitId);
+            newReview.setRating((int) rating);
+            newReview.setComment(comment);
+
+            if (reviewDAO.insertReview(newReview)) {
+                Toast.makeText(this, "Cảm ơn bạn đã đánh giá!", Toast.LENGTH_SHORT).show();
+
+                // Cập nhật lại UI: load lại list và ẩn nút đánh giá
+                loadReviewData(fruitId);
+                checkReviewEligibility(fruitId);
+            }
+        });
+
+        builder.setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
+        builder.create().show();
+    }
+
+    public void loadReviewData(int fruitId) {
+        float avg = reviewDAO.getAvgRating(fruitId);
+        ratingBarMain.setRating(avg);
+        tvAverageRating.setText(String.format("%.1f/5", avg));
+
+        List<Review> reviews = reviewDAO.getReviewsByFruitId(fruitId);
+
+        // Truyền thêm context (this) và currentUserId để Adapter xử lý việc XÓA
+        reviewAdapter = new ReviewAdapter(this, reviews, currentUserId);
+        recyclerReviews.setLayoutManager(new LinearLayoutManager(this));
+        recyclerReviews.setAdapter(reviewAdapter);
+        recyclerReviews.setNestedScrollingEnabled(false);
     }
 
     private void loadSizeData(int fruitId) {
         List<FruitSize> sizeList = fruitSizeDAO.getSizesByFruitId(fruitId);
 
         if (sizeList != null && !sizeList.isEmpty()) {
-            // Mặc định chọn size đầu tiên khi vừa vào màn hình
-            selectedSizeId = sizeList.get(0).getId();
-            tvFruitPrice.setText(String.format("%,d VND", sizeList.get(0).getPrice()));
+            int defaultPos = 0;
+            for (int i = 0; i < sizeList.size(); i++) {
+                if (sizeList.get(i).getStatus() == 1) {
+                    defaultPos = i;
+                    break;
+                }
+            }
+
+            FruitSize defaultSize = sizeList.get(defaultPos);
+            selectedSizeId = defaultSize.getId();
+            tvFruitPrice.setText(String.format("%,d VND", defaultSize.getPrice()));
+            updateUIByStatus(defaultSize);
 
             sizeAdapter = new FruitSizeAdapter(this, (ArrayList<FruitSize>) sizeList, fruitSize -> {
-                if (fruitSize != null) {
-                    // Cập nhật size Id khi người dùng click vào RecyclerView
-                    selectedSizeId = fruitSize.getId();
-                    tvFruitPrice.setText(String.format("%,d VND", fruitSize.getPrice()));
-                }
+                selectedSizeId = fruitSize.getId();
+                tvFruitPrice.setText(String.format("%,d VND", fruitSize.getPrice()));
+                updateUIByStatus(fruitSize);
             });
 
+            sizeAdapter.setSelectedPosition(defaultPos);
             recyclerSize.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
             recyclerSize.setAdapter(sizeAdapter);
-            recyclerSize.setNestedScrollingEnabled(false);
+        }
+    }
+
+    private void updateUIByStatus(FruitSize fruitSize) {
+        if (fruitSize.getStatus() == 1) {
+            tvStatusDetail.setText("Trạng thái: Còn hàng");
+            tvStatusDetail.setTextColor(android.graphics.Color.parseColor("#4CAF50"));
+            btnAddToCart.setEnabled(true);
+            btnAddToCart.setText("THÊM VÀO GIỎ HÀNG");
+            btnAddToCart.setAlpha(1.0f);
+        } else {
+            tvStatusDetail.setText("Trạng thái: Size này hiện đã hết hàng");
+            tvStatusDetail.setTextColor(android.graphics.Color.RED);
+            btnAddToCart.setEnabled(false);
+            btnAddToCart.setText("HẾT HÀNG");
+            btnAddToCart.setAlpha(0.5f);
         }
     }
 
     private void handleAddToCart() {
-        // 1. Lấy đối tượng FruitSize đang được chọn trực tiếp từ Adapter
         FruitSize selectedSize = sizeAdapter.getSelectedSize();
-
         if (selectedSize == null) {
             Toast.makeText(this, "Vui lòng chọn kích thước!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 2. Lấy hoặc tạo Cart ID cho người dùng
         int cartId = cartDAO.getOrCreateCartId(currentUserId);
-
-        // 3. Tạo đối tượng CartItem để đưa vào giỏ
         CartItem item = new CartItem();
         item.setCartId(cartId);
         item.setFruitSizeId(selectedSize.getId());
-
-        // QUAN TRỌNG: Lấy số lượng thực tế từ đối tượng selectedSize
-        // chứ không để số 1 cố định nữa
         item.setQuantity(selectedSize.getQuantity());
 
-        // 4. Thực hiện lưu vào DB
         cartDAO.addToCart(item);
-
         Toast.makeText(this, "Đã thêm " + selectedSize.getQuantity() + " sản phẩm vào giỏ!", Toast.LENGTH_SHORT).show();
     }
 
     private void displayFruitInfo(Fruit fruit) {
         tvName.setText(fruit.getName());
         tvDescription.setText(fruit.getDescription());
-
-        // Hiển thị ảnh
         int resId = getResources().getIdentifier(fruit.getImage(), "drawable", getPackageName());
         if (resId != 0) imgFruit.setImageResource(resId);
 
-        // Hiển thị Category
         Category category = categoryDAO.getCategoryById(fruit.getCategoryId());
         if (category != null) {
             tvCategory.setText("Danh mục: " + category.getName());
         }
-    }
-
-    private void loadReviewData(int fruitId) {
-        // Điểm trung bình
-        float avg = reviewDAO.getAvgRating(fruitId);
-        ratingBarMain.setRating(avg);
-        tvAverageRating.setText(String.format("%.1f/5", avg));
-
-        // Danh sách review
-        List<Review> reviews = reviewDAO.getReviewsByFruitId(fruitId);
-        reviewAdapter = new ReviewAdapter(this, reviews);
-        recyclerReviews.setLayoutManager(new LinearLayoutManager(this));
-        recyclerReviews.setAdapter(reviewAdapter);
-        recyclerReviews.setNestedScrollingEnabled(false);
     }
 }

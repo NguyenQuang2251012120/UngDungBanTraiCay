@@ -9,6 +9,7 @@ public class FruitSize implements Serializable {
     private String size;
     private int price;
     private int quantity = 1;
+    private int status;
 
     public FruitSize() {
     }
@@ -37,4 +38,6 @@ public class FruitSize implements Serializable {
     public void setPrice(int price) { this.price = price; }
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
+    public int getStatus() { return status; }
+    public void setStatus(int status) { this.status = status; }
 }

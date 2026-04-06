@@ -9,6 +9,11 @@ public class OrderItem implements Serializable {
     private int fruitSizeId;
     private int quantity;
     private int price;
+    private int fruitId;   // Thêm biến này
+    private String fruitName; // Thêm biến này để hiện tiêu đề Dialog
+    private String fruitImage;
+    private String sizeName;
+
 
     public OrderItem() {}
 
@@ -39,4 +44,14 @@ public class OrderItem implements Serializable {
     public int getPrice() { return price; }
 
     public void setPrice(int price) { this.price = price; }
+
+    public int getFruitId() { return fruitId; }
+    public void setFruitId(int fruitId) { this.fruitId = fruitId; }
+    public String getFruitName() { return fruitName; }
+
+    public void setFruitName(String fruitName) { this.fruitName = fruitName; }
+    public String getSizeName() { return sizeName; }
+    public void setSizeName(String sizeName) { this.sizeName = sizeName; }
+    public String getFruitImage() { return fruitImage; }
+    public void setFruitImage(String fruitImage) { this.fruitImage = fruitImage; }
 }

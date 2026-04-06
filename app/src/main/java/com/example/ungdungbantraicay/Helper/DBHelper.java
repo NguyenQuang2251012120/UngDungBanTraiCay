@@ -9,7 +9,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     // Tên và Phiên bản Database
     private static final String DB_NAME = "FruitShop.db";
-    private static final int DB_VERSION = 2; // Tăng version lên vì thêm bảng Review
+    private static final int DB_VERSION = 5; // Tăng version lên vì thêm bảng Review
 
     // =============================================================
     // ĐỊNH NGHĨA TÊN BẢNG VÀ CỘT (CONSTANTS)
@@ -46,6 +46,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String COL_SIZE_FRUIT_ID = "fruit_id";
     public static final String COL_SIZE_NAME = "size";
     public static final String COL_SIZE_PRICE = "price";
+    public static final String COL_SIZE_STATUS = "status";
 
     // Bảng Review (Mới thêm)
     public static final String TABLE_REVIEW = "Review";
@@ -75,6 +76,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String COL_ORDER_USER_ID = "user_id";
     public static final String COL_ORDER_TOTAL = "total_price";
     public static final String COL_ORDER_STATUS = "status";
+    public static final String COL_ORDER_ADDRESS = "delivery_address";
     public static final String COL_ORDER_DATE = "created_at";
 
     // Bảng OrderItem (Chi tiết đơn hàng)
@@ -85,8 +87,11 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String COL_OI_QUANTITY = "quantity";
     public static final String COL_OI_PRICE = "price";
 
-    // ... Bạn có thể tiếp tục định nghĩa cho Cart, Order tương tự ...
-
+    public static final int STATUS_PENDING = 0;   // Chờ xác nhận
+    public static final int STATUS_CONFIRMED = 1; // Đã xác nhận
+    public static final int STATUS_SHIPPING = 2;  // Đang giao
+    public static final int STATUS_SUCCESS = 3;   // Giao thành công
+    public static final int STATUS_CANCELLED = 4; // Đã hủy
     // =============================================================
     // CÂU LỆNH TẠO BẢNG (CREATE TABLE STRINGS)
     // =============================================================
@@ -119,6 +124,7 @@ public class DBHelper extends SQLiteOpenHelper {
             + COL_SIZE_FRUIT_ID + " INTEGER, "
             + COL_SIZE_NAME + " TEXT, "
             + COL_SIZE_PRICE + " INTEGER, "
+            + COL_SIZE_STATUS + " INTEGER DEFAULT 1, " // THÊM DÒNG NÀY
             + "FOREIGN KEY(" + COL_SIZE_FRUIT_ID + ") REFERENCES " + TABLE_FRUIT + "(" + COL_FRUIT_ID + "))";
 
     private static final String CREATE_TABLE_REVIEW = "CREATE TABLE " + TABLE_REVIEW + " ("
@@ -150,7 +156,8 @@ public class DBHelper extends SQLiteOpenHelper {
             + COL_ORDER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + COL_ORDER_USER_ID + " INTEGER, "
             + COL_ORDER_TOTAL + " INTEGER, "
-            + COL_ORDER_STATUS + " TEXT, "
+            + COL_ORDER_STATUS + " INTEGER DEFAULT 0, "
+            + COL_ORDER_ADDRESS + " TEXT, " // <--- THÊM DÒNG NÀY
             + COL_ORDER_DATE + " TEXT DEFAULT CURRENT_TIMESTAMP, "
             + "FOREIGN KEY(" + COL_ORDER_USER_ID + ") REFERENCES " + TABLE_USER + "(" + COL_USER_ID + "))";
 
@@ -266,6 +273,16 @@ public class DBHelper extends SQLiteOpenHelper {
                 " ORDER BY r." + COL_REV_ID + " DESC";
 
         return db.rawQuery(query, new String[]{String.valueOf(fruitId)});
+    }
+    public static String getStatusName(int status) {
+        switch (status) {
+            case DBHelper.STATUS_PENDING:   return "Chờ xác nhận";
+            case DBHelper.STATUS_CONFIRMED: return "Đã xác nhận";
+            case DBHelper.STATUS_SHIPPING:  return "Đang giao hàng";
+            case DBHelper.STATUS_SUCCESS:   return "Giao thành công";
+            case DBHelper.STATUS_CANCELLED: return "Đã hủy";
+            default: return "Không xác định";
+        }
     }
 
 }
