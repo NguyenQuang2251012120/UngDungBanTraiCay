@@ -13,6 +13,38 @@
         android:padding="8dp" />
 
     <LinearLayout
+        android:id="@+id/layoutEmptyCart"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:src="@drawable/empty_cart"
+            android:contentDescription="Empty Cart" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bạn chưa có sản phẩm trong giỏ hàng\nHãy tiếp tục mua sắm!"
+            android:textColor="#888"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:layout_marginTop="8dp"/>
+
+        <Button
+            android:id="@+id/btnGoHome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tiếp tục mua sắm"
+            android:backgroundTint="#4CAF50"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="12dp"/>
+    </LinearLayout>
+    <LinearLayout
         android:id="@+id/layoutCheckout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

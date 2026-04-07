@@ -5,8 +5,10 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,10 +33,22 @@ public class CartFragment extends Fragment {
     List<CartItem> cartList;
     CartAdapter adapter;
     int userId;
+    private LinearLayout layoutEmptyCart;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_cart, container, false);
+
+        layoutEmptyCart = view.findViewById(R.id.layoutEmptyCart);
+
+        Button btnGoHome = view.findViewById(R.id.btnGoHome);
+
+        btnGoHome.setOnClickListener(v -> {
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.frame_container, new HomeFragment())
+                    .commit();
+        });
 
         recyclerCart = view.findViewById(R.id.recyclerCart);
         tvTotalPrice = view.findViewById(R.id.tvTotalPrice);
@@ -53,6 +67,16 @@ public class CartFragment extends Fragment {
     private void loadData() {
         if (userId != -1) {
             cartList = cartDAO.getItemsByUserId(userId);
+
+            if (cartList == null || cartList.isEmpty()) {
+                recyclerCart.setVisibility(View.GONE);
+                layoutEmptyCart.setVisibility(View.VISIBLE);
+                tvTotalPrice.setText("0 VND");
+                return;
+            } else {
+                recyclerCart.setVisibility(View.VISIBLE);
+                layoutEmptyCart.setVisibility(View.GONE);
+            }
 
             // Triển khai Interface mới từ CartAdapter
             adapter = new CartAdapter(getContext(), cartList, new CartAdapter.CartUpdateListener() {
@@ -73,6 +97,7 @@ public class CartFragment extends Fragment {
                 @Override
                 public void onDeleteItem(CartItem item, int position) {
                     deleteCartItem(item, position);
+                    loadData();
                 }
             });
 
@@ -164,8 +189,37 @@ public class CartFragment extends Fragment {
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
+//        LayoutInflater inflater = LayoutInflater.from(getContext());
+//        View view = inflater.inflate(R.layout.dialog_checkout, null);
+//
+//        EditText edtName = view.findViewById(R.id.edtName);
+//        EditText edtPhone = view.findViewById(R.id.edtPhone);
+//        EditText edtTime = view.findViewById(R.id.edtTime);
+//
+//        AlertDialog dialog = new AlertDialog.Builder(getContext())
+//                .setTitle("Xác nhận đơn hàng")
+//                .setView(view)
+//                .setPositiveButton("Đặt ngay", null)
+//                .setNegativeButton("Hủy", null)
+//                .create();
+//        dialog.show();
+//
+//        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+//            String name = edtName.getText().toString().trim();
+//            String phone = edtPhone.getText().toString().trim();
+//            String address = edtAddress.getText().toString().trim();
+//            String time = edtTime.getText().toString().trim();
+//
+//            if (name.isEmpty() || phone.isEmpty() || address.isEmpty() || time.isEmpty()) {
+//                Toast.makeText(getContext(), "Vui lòng nhập đầy đủ thông tin!", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+//            else {
+//                performOrder(address);
+//            }
+//            dialog.dismiss();
+//        });
     }
-
     private void performOrder(String finalAddress) {
         OrderDAO orderDAO = new OrderDAO(getContext());
         int total = calculateTotalValue();
