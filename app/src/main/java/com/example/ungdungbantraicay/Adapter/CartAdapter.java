@@ -21,8 +21,11 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
     private List<CartItem> list;
     private CartUpdateListener listener;
 
+    // Interface đầy đủ các hành động nghiệp vụ
     public interface CartUpdateListener {
-        void onUpdate(); // Để gọi tính lại tổng tiền ở Fragment
+        void onIncreaseQuantity(CartItem item, int position);
+        void onDecreaseQuantity(CartItem item, int position);
+        void onDeleteItem(CartItem item, int position);
     }
 
     public CartAdapter(Context context, List<CartItem> list, CartUpdateListener listener) {
@@ -41,8 +44,8 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         CartItem item = list.get(position);
-        CartDAO cartDAO = new CartDAO(context);
 
+        // Hiển thị dữ liệu (Chỉ giữ lại phần hiển thị)
         holder.tvName.setText(item.getFruitName());
         holder.tvSize.setText("Size: " + item.getSizeName());
         holder.tvPrice.setText(String.format("%,d VND", item.getPrice()));
@@ -51,28 +54,17 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
         int resId = context.getResources().getIdentifier(item.getFruitImage(), "drawable", context.getPackageName());
         holder.imgFruit.setImageResource(resId);
 
+        // Bắt sự kiện và gửi ngược lại cho Fragment/Activity xử lý
         holder.btnPlus.setOnClickListener(v -> {
-            item.setQuantity(item.getQuantity() + 1);
-            cartDAO.updateQuantity(item.getId(), item.getQuantity());
-            notifyItemChanged(position);
-            listener.onUpdate();
+            if (listener != null) listener.onIncreaseQuantity(item, position);
         });
 
         holder.btnMinus.setOnClickListener(v -> {
-            if (item.getQuantity() > 1) {
-                item.setQuantity(item.getQuantity() - 1);
-                cartDAO.updateQuantity(item.getId(), item.getQuantity());
-                notifyItemChanged(position);
-                listener.onUpdate();
-            }
+            if (listener != null) listener.onDecreaseQuantity(item, position);
         });
 
         holder.btnDelete.setOnClickListener(v -> {
-            cartDAO.deleteItem(item.getId());
-            list.remove(position);
-            notifyItemRemoved(position);
-            notifyItemRangeChanged(position, list.size());
-            listener.onUpdate();
+            if (listener != null) listener.onDeleteItem(item, position);
         });
     }
 

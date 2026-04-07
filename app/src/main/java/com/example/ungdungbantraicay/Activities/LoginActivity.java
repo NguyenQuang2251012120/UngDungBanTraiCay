@@ -9,6 +9,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.ungdungbantraicay.DAO.UserDAO;
+import com.example.ungdungbantraicay.Model.User;
 import com.example.ungdungbantraicay.R;
 
 public class LoginActivity extends AppCompatActivity {
@@ -21,14 +22,24 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        userDAO = new UserDAO(this);
 
-        // 1. KIỂM TRA ĐĂNG NHẬP TỰ ĐỘNG (Auto-login)
+        // 1. KIỂM TRA ĐĂNG NHẬP TỰ ĐỘNG
         SharedPreferences pref = getSharedPreferences("USER_FILE", MODE_PRIVATE);
         String savedUser = pref.getString("username", "");
+
         if (!savedUser.isEmpty()) {
-            startActivity(new Intent(this, HomeActivity.class));
-            finish();
-            return;
+            User user = userDAO.getUserInfo(savedUser);
+            if (user != null && user.getStatus() == 1) {
+                // CHỈNH SỬA TẠI ĐÂY: Truyền role vào để điều hướng đúng
+                navigateToHome(user.getRole());
+                return;
+            } else {
+                pref.edit().clear().apply();
+                if (user != null && user.getStatus() == 0) {
+                    Toast.makeText(this, "Tài khoản đã bị khóa", Toast.LENGTH_LONG).show();
+                }
+            }
         }
 
         setContentView(R.layout.activity_login);
@@ -38,41 +49,66 @@ public class LoginActivity extends AppCompatActivity {
         edtPassword = findViewById(R.id.edtPassword);
         btnLogin = findViewById(R.id.btnLogin);
         txtRegister = findViewById(R.id.txtRegister);
-        userDAO = new UserDAO(this);
 
-        // 3. XỬ LÝ SỰ KIỆN
+        // 3. SỰ KIỆN
         btnLogin.setOnClickListener(v -> handleLogin());
-
-        txtRegister.setOnClickListener(v -> {
-            startActivity(new Intent(this, RegisterActivity.class));
-        });
+        txtRegister.setOnClickListener(v -> startActivity(new Intent(this, RegisterActivity.class)));
     }
 
     private void handleLogin() {
-        String user = edtUsername.getText().toString().trim();
-        String pass = edtPassword.getText().toString().trim();
+        String userStr = edtUsername.getText().toString().trim();
+        String passStr = edtPassword.getText().toString().trim();
 
-        if (user.isEmpty() || pass.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập đủ tài khoản & mật khẩu", Toast.LENGTH_SHORT).show();
+        if (userStr.isEmpty() || passStr.isEmpty()) {
+            Toast.makeText(this, "Vui lòng nhập đủ thông tin", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (userDAO.checkLogin(user, pass)) {
-            // Lấy ID từ database trước khi lưu vào Pref
-            int userId = userDAO.getUserIdByUsername(user);
+        User user = userDAO.login(userStr, passStr);
 
-            // LƯU PHIÊN ĐĂNG NHẬP
-            SharedPreferences pref = getSharedPreferences("USER_FILE", MODE_PRIVATE);
-            SharedPreferences.Editor editor = pref.edit();
-            editor.putString("username", user);
-            editor.putInt("userId", userId); // LƯU THÊM DÒNG NÀY
-            editor.apply();
+        if (user != null) {
+            if (user.getStatus() == 1) {
+                saveSession(user);
+                Toast.makeText(this, "Chào mừng " + user.getFullname(), Toast.LENGTH_SHORT).show();
 
-            Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, HomeActivity.class));
-            finish();
+                // CHỈNH SỬA TẠI ĐÂY: Điều hướng dựa trên role của user vừa login
+                navigateToHome(user.getRole());
+            } else {
+                showLockedAccountDialog();
+            }
         } else {
             Toast.makeText(this, "Tài khoản hoặc mật khẩu không chính xác", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void saveSession(User user) {
+        SharedPreferences pref = getSharedPreferences("USER_FILE", MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString("username", user.getUsername());
+        editor.putInt("userId", user.getId());
+        editor.putString("role", user.getRole());
+        editor.apply();
+    }
+
+    private void showLockedAccountDialog() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Tài khoản bị vô hiệu hóa")
+                .setMessage("Tài khoản này đã bị xóa hoặc bị khóa bởi hệ thống. Vui lòng liên hệ với bộ phận hỗ trợ để biết thêm chi tiết.")
+                .setPositiveButton("Đã hiểu", null)
+                .show();
+    }
+
+    // CẬP NHẬT PHƯƠNG THỨC NÀY
+    private void navigateToHome(String role) {
+        Intent intent;
+        if ("admin".equalsIgnoreCase(role)) {
+            // Nếu là admin thì đi tới AdminMainActivity
+            intent = new Intent(this, AdminMainActivity.class);
+        } else {
+            // Nếu là user (hoặc vai trò khác) thì đi tới HomeActivity của người dùng
+            intent = new Intent(this, HomeActivity.class);
+        }
+        startActivity(intent);
+        finish();
     }
 }

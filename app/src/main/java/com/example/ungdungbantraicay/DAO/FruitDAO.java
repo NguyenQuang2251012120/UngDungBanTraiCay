@@ -96,19 +96,25 @@ public class FruitDAO {
     }
 
     private Fruit cursorToFruit(Cursor cursor) {
-        Fruit f = new Fruit();
-        f.setId(cursor.getInt(cursor.getColumnIndex(DBHelper.COL_FRUIT_ID)));
-        f.setName(cursor.getString(cursor.getColumnIndex(DBHelper.COL_FRUIT_NAME)));
-        f.setDescription(cursor.getString(cursor.getColumnIndex(DBHelper.COL_FRUIT_DESC)));
-        f.setImage(cursor.getString(cursor.getColumnIndex(DBHelper.COL_FRUIT_IMG)));
-        f.setCategoryId(cursor.getInt(cursor.getColumnIndex(DBHelper.COL_FRUIT_CAT_ID)));
-        f.setStatus(cursor.getInt(cursor.getColumnIndex(DBHelper.COL_FRUIT_STATUS)));
+        // 1. Lấy dữ liệu cơ bản từ các cột tương ứng trong DBHelper
+        int id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_FRUIT_ID));
+        String name = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_FRUIT_NAME));
+        String desc = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_FRUIT_DESC));
+        String img = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_FRUIT_IMG));
+        int catId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_FRUIT_CAT_ID));
+        int status = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_FRUIT_STATUS));
 
-        // Lấy Rating
+        // 2. Lấy Average Rating (từ Subquery trong SQL)
+        float rating = 0;
         int ratingIndex = cursor.getColumnIndex("avg_rating");
-        if (ratingIndex != -1) f.setAverageRating(cursor.getFloat(ratingIndex));
+        if (ratingIndex != -1) {
+            rating = cursor.getFloat(ratingIndex);
+        }
 
-        // Lấy giá thấp nhất (Đã được lọc size còn hàng từ SQL)
+        // 3. Khởi tạo đối tượng bằng Constructor mới (có Rating, không có MinPrice)
+        Fruit f = new Fruit(id, name, desc, img, catId, status, rating);
+
+        // 4. Set MinPrice riêng (nếu câu query có trả về cột min_price)
         int priceIndex = cursor.getColumnIndex("min_price");
         if (priceIndex != -1) {
             f.setMinPrice(cursor.getInt(priceIndex));

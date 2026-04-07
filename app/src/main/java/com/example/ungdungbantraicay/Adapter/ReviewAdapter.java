@@ -25,13 +25,20 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder
 
     private Context context;
     private List<Review> reviewList;
-    private int currentUserId; // 1. Thêm biến để biết ai đang xem
+    private int currentUserId;
+    private OnReviewActionListener listener; // Interface để báo về Activity
 
+
+    public interface OnReviewActionListener {
+        void onEdit(Review review, int position);
+        void onDelete(Review review, int position);
+    }
     // 2. Cập nhật Constructor để nhận 3 tham số
-    public ReviewAdapter(Context context, List<Review> reviewList, int currentUserId) {
+    public ReviewAdapter(Context context, List<Review> reviewList, int currentUserId, OnReviewActionListener listener) {
         this.context = context;
         this.reviewList = reviewList;
         this.currentUserId = currentUserId;
+        this.listener = listener;
     }
 
     @NonNull
@@ -44,32 +51,21 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Review review = reviewList.get(position);
+        holder.tvUserName.setText(review.getUserName());
+        holder.ratingBar.setRating(review.getRating());
+        holder.tvComment.setText(review.getComment());
+        holder.tvDate.setText(review.getCreatedAt());
 
-        if (review != null) {
-            holder.tvUserName.setText(review.getUserName());
-            holder.ratingBar.setRating(review.getRating());
-            holder.tvComment.setText(review.getComment());
-            holder.tvDate.setText(review.getCreatedAt());
+        // Chỉ hiện nút Sửa/Xóa nếu là chủ sở hữu
+        if (review.getUserId() == currentUserId) {
+            holder.imgDelete.setVisibility(View.VISIBLE);
+            holder.imgEdit.setVisibility(View.VISIBLE);
 
-            // LOGIC HIỂN THỊ NÚT SỬA/XÓA
-            if (review.getUserId() == currentUserId) {
-                holder.imgDelete.setVisibility(View.VISIBLE);
-                holder.imgEdit.setVisibility(View.VISIBLE); // HIỆN NÚT EDIT
-
-                // Sự kiện Xóa
-                holder.imgDelete.setOnClickListener(v -> {
-                    showDeleteConfirmDialog(review, position);
-                });
-
-                // SỰ KIỆN SỬA
-                holder.imgEdit.setOnClickListener(v -> {
-                    showEditReviewDialog(review, position); // Gọi hàm mở Dialog sửa
-                });
-
-            } else {
-                holder.imgDelete.setVisibility(View.GONE);
-                holder.imgEdit.setVisibility(View.GONE); // ẨN NẾU KHÔNG PHẢI CHỦ SỞ HỮU
-            }
+            holder.imgDelete.setOnClickListener(v -> listener.onDelete(review, position));
+            holder.imgEdit.setOnClickListener(v -> listener.onEdit(review, position));
+        } else {
+            holder.imgDelete.setVisibility(View.GONE);
+            holder.imgEdit.setVisibility(View.GONE);
         }
     }
 

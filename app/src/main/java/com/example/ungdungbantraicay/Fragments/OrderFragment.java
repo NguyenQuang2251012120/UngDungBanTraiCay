@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 
 import com.example.ungdungbantraicay.Activities.OrderDetailActivity;
 import com.example.ungdungbantraicay.Adapter.OrderAdapter;
+import com.example.ungdungbantraicay.DAO.OrderDAO;
 import com.example.ungdungbantraicay.Model.Order;
 import com.example.ungdungbantraicay.R;
 
@@ -20,16 +21,16 @@ import java.util.List;
 
 
 public class OrderFragment extends Fragment {
-    RecyclerView recyclerOrder;
-    com.example.ungdungbantraicay.DAO.OrderDAO orderDAO;
-    List<Order> orderList;
+    private RecyclerView recyclerOrder;
+    private OrderDAO orderDAO;
+    private List<Order> orderList;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_order, container, false);
 
         recyclerOrder = view.findViewById(R.id.recyclerOrder);
-        orderDAO = new com.example.ungdungbantraicay.DAO.OrderDAO(getContext());
+        orderDAO = new OrderDAO(getContext());
 
         // Lấy userId từ SharedPreferences
         android.content.SharedPreferences pref = getActivity().getSharedPreferences("USER_FILE", android.content.Context.MODE_PRIVATE);

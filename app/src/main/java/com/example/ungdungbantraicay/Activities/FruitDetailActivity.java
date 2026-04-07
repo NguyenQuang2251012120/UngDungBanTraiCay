@@ -51,6 +51,7 @@ public class FruitDetailActivity extends AppCompatActivity {
 
     private FruitSizeAdapter sizeAdapter;
     private ReviewAdapter reviewAdapter;
+    private List<Review> reviewList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -162,20 +163,94 @@ public class FruitDetailActivity extends AppCompatActivity {
         builder.create().show();
     }
 
+    // 1. Cập nhật hàm loadReviewData để truyền Listener vào Adapter
     public void loadReviewData(int fruitId) {
         float avg = reviewDAO.getAvgRating(fruitId);
         ratingBarMain.setRating(avg);
         tvAverageRating.setText(String.format("%.1f/5", avg));
 
-        List<Review> reviews = reviewDAO.getReviewsByFruitId(fruitId);
+        reviewList = reviewDAO.getReviewsByFruitId(fruitId);
 
-        // Truyền thêm context (this) và currentUserId để Adapter xử lý việc XÓA
-        reviewAdapter = new ReviewAdapter(this, reviews, currentUserId);
+        // Triển khai Interface mới từ ReviewAdapter
+        reviewAdapter = new ReviewAdapter(this, reviewList, currentUserId, new ReviewAdapter.OnReviewActionListener() {
+            @Override
+            public void onEdit(Review review, int position) {
+                showEditReviewDialog(review, position);
+            }
+
+            @Override
+            public void onDelete(Review review, int position) {
+                showDeleteConfirmDialog(review, position);
+            }
+        });
+
         recyclerReviews.setLayoutManager(new LinearLayoutManager(this));
         recyclerReviews.setAdapter(reviewAdapter);
         recyclerReviews.setNestedScrollingEnabled(false);
     }
 
+    // 2. Logic XÓA Đánh giá (Chuyển từ Adapter sang Activity)
+    private void showDeleteConfirmDialog(Review review, int position) {
+        new AlertDialog.Builder(this)
+                .setTitle("Xóa đánh giá")
+                .setMessage("Bạn có chắc chắn muốn xóa nhận xét này không?")
+                .setPositiveButton("Xóa", (dialog, which) -> {
+                    if (reviewDAO.deleteReview(review.getId())) {
+                        reviewList.remove(position);
+                        reviewAdapter.notifyItemRemoved(position);
+                        reviewAdapter.notifyItemRangeChanged(position, reviewList.size());
+
+                        Toast.makeText(this, "Đã xóa đánh giá!", Toast.LENGTH_SHORT).show();
+
+                        // Cập nhật lại UI tổng thể
+                        updateReviewStats(review.getFruitId());
+                        checkReviewEligibility(review.getFruitId());
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    // 3. Logic SỬA Đánh giá (Chuyển từ Adapter sang Activity)
+    private void showEditReviewDialog(Review review, int position) {
+        View view = getLayoutInflater().inflate(R.layout.dialog_review, null);
+        RatingBar rbReview = view.findViewById(R.id.rbReview);
+        EditText edtComment = view.findViewById(R.id.edtReviewComment);
+
+        rbReview.setRating(review.getRating());
+        edtComment.setText(review.getComment());
+
+        new AlertDialog.Builder(this)
+                .setTitle("Chỉnh sửa đánh giá")
+                .setView(view)
+                .setPositiveButton("Cập nhật", (dialog, which) -> {
+                    float newRating = rbReview.getRating();
+                    String newComment = edtComment.getText().toString().trim();
+
+                    if (newRating == 0) {
+                        Toast.makeText(this, "Vui lòng chọn số sao!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (reviewDAO.updateReview(review.getId(), (int) newRating, newComment)) {
+                        review.setRating((int) newRating);
+                        review.setComment(newComment);
+                        reviewAdapter.notifyItemChanged(position);
+
+                        updateReviewStats(review.getFruitId());
+                        Toast.makeText(this, "Đã cập nhật!", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    // Hàm phụ để cập nhật lại số sao trung bình trên tiêu đề
+    private void updateReviewStats(int fruitId) {
+        float avg = reviewDAO.getAvgRating(fruitId);
+        ratingBarMain.setRating(avg);
+        tvAverageRating.setText(String.format("%.1f/5", avg));
+    }
     private void loadSizeData(int fruitId) {
         List<FruitSize> sizeList = fruitSizeDAO.getSizesByFruitId(fruitId);
 

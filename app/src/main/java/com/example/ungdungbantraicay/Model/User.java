@@ -3,21 +3,15 @@ package com.example.ungdungbantraicay.Model;
 import java.io.Serializable;
 
 public class User implements Serializable {
-
     private int id;
-    private String username;
-    private String password;
-    private String fullname;
-    private String email;
-    private String phone;
-    private String address;
-    private String role;
+    private String username, password, fullname, email, phone, address, role;
+    private int status;
 
-    public User() {
-    }
+    public User() {}
 
+    // Constructor đầy đủ cho DAO
     public User(int id, String username, String password, String fullname,
-                String email, String phone, String address, String role) {
+                String email, String phone, String address, String role, int status) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -26,6 +20,7 @@ public class User implements Serializable {
         this.phone = phone;
         this.address = address;
         this.role = role;
+        this.status = status;
     }
 
     public int getId() {
@@ -91,4 +86,6 @@ public class User implements Serializable {
     public void setRole(String role) {
         this.role = role;
     }
+    public int getStatus() { return status; }
+    public void setStatus(int status) { this.status = status; }
 }

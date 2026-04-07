@@ -21,7 +21,13 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // 1. ÁNH XẠ
+        initViews();
+        userDAO = new UserDAO(this);
+
+        btnReg.setOnClickListener(v -> handleRegister());
+    }
+
+    private void initViews() {
         edtUser = findViewById(R.id.edtUsername);
         edtPass = findViewById(R.id.edtPassword);
         edtConfirm = findViewById(R.id.edtConfirm);
@@ -30,14 +36,9 @@ public class RegisterActivity extends AppCompatActivity {
         edtPhone = findViewById(R.id.edtPhone);
         edtAddr = findViewById(R.id.edtAddress);
         btnReg = findViewById(R.id.btnRegister);
-
-        userDAO = new UserDAO(this);
-
-        btnReg.setOnClickListener(v -> handleRegister());
     }
 
     private void handleRegister() {
-        // Lấy dữ liệu và loại bỏ khoảng trắng thừa
         String user = edtUser.getText().toString().trim();
         String pass = edtPass.getText().toString().trim();
         String confirm = edtConfirm.getText().toString().trim();
@@ -46,7 +47,7 @@ public class RegisterActivity extends AppCompatActivity {
         String phone = edtPhone.getText().toString().trim();
         String addr = edtAddr.getText().toString().trim();
 
-        // 2. KIỂM TRA DỮ LIỆU (VALIDATION)
+        // 1. VALIDATION (Kiểm tra dữ liệu)
         if (user.length() < 5) {
             edtUser.setError("Tên đăng nhập tối thiểu 5 ký tự");
             return;
@@ -59,36 +60,32 @@ public class RegisterActivity extends AppCompatActivity {
             edtConfirm.setError("Mật khẩu xác nhận không khớp");
             return;
         }
-        if (full.isEmpty()) {
-            edtFull.setError("Vui lòng nhập họ tên");
-            return;
-        }
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             edtEmail.setError("Email không đúng định dạng");
             return;
         }
-
-// 3. KIỂM TRA TRÙNG USERNAME TRONG DATABASE
-        if (userDAO.checkUsername(user)) {
-            Toast.makeText(this, "Tên đăng nhập đã tồn tại!", Toast.LENGTH_SHORT).show();
+        if (phone.length() < 10 || phone.length() > 11) {
+            edtPhone.setError("Số điện thoại không hợp lệ");
             return;
         }
 
-        // 4. THỰC HIỆN ĐĂNG KÝ (Gom vào Object User)
-        User newUser = new User();
-        newUser.setUsername(user);
-        newUser.setPassword(pass);
-        newUser.setFullname(full);
-        newUser.setEmail(email);
-        newUser.setPhone(phone);
-        newUser.setAddress(addr);
+        // 2. KIỂM TRA TỒN TẠI (Kể cả status = 0)
+        // Trong DAO, hàm checkUsername nên SELECT * WHERE username = ? (không quan tâm status)
+        if (userDAO.checkUsername(user)) {
+            Toast.makeText(this, "Tên đăng nhập này đã có người sử dụng!", Toast.LENGTH_LONG).show();
+            return;
+        }
 
-        // Gọi DAO truyền Object vào
+        // 3. THỰC HIỆN ĐĂNG KÝ
+        // Thay vì dùng setter, ta dùng Constructor (để trống ID vì DB tự tăng, Status mặc định là 1)
+        // Lưu ý: Tùy vào Constructor bạn tạo ở Model User, bạn có thể truyền status = 1 trực tiếp.
+        User newUser = new User(0, user, pass, full, email, phone, addr, "user", 1);
+
         if (userDAO.insertUser(newUser)) {
             Toast.makeText(this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
-            finish(); // Quay lại màn hình Login
+            finish();
         } else {
-            Toast.makeText(this, "Đăng ký thất bại, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Lỗi hệ thống, vui lòng thử lại sau!", Toast.LENGTH_SHORT).show();
         }
     }
 }

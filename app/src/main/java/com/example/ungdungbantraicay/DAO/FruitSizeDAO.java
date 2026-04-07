@@ -21,26 +21,21 @@ public class FruitSizeDAO {
 
     public List<FruitSize> getSizesByFruitId(int fruitId) {
         List<FruitSize> list = new ArrayList<>();
-        Cursor cursor = database.query(DBHelper.TABLE_FRUIT_SIZE, null,
-                DBHelper.COL_SIZE_FRUIT_ID + " = ?",
-                new String[]{String.valueOf(fruitId)}, null, null, null);
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM FruitSize WHERE fruit_id = ? AND status = 1",
+                new String[]{String.valueOf(fruitId)});
 
         if (cursor.moveToFirst()) {
             do {
-                FruitSize s = new FruitSize();
-                s.setId(cursor.getInt(cursor.getColumnIndex(DBHelper.COL_SIZE_ID)));
-                s.setSize(cursor.getString(cursor.getColumnIndex(DBHelper.COL_SIZE_NAME)));
-                s.setPrice(cursor.getInt(cursor.getColumnIndex(DBHelper.COL_SIZE_PRICE)));
-
-                // LẤY TRẠNG THÁI TỪ DATABASE
-                int statusIndex = cursor.getColumnIndex("status"); // Hoặc dùng biến hằng số
-                if (statusIndex != -1) {
-                    s.setStatus(cursor.getInt(statusIndex));
-                }
-                list.add(s);
+                list.add(new FruitSize(
+                        cursor.getInt(0), // id
+                        cursor.getInt(1), // fruitId
+                        cursor.getString(2), // size
+                        cursor.getInt(3), // price
+                        cursor.getInt(4)  // status -> Thêm dòng này vào constructor
+                ));
             } while (cursor.moveToNext());
         }
         cursor.close();
         return list;
-    }
-}
+    }}

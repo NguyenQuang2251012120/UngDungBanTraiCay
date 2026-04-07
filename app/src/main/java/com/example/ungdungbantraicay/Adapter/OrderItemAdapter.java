@@ -23,7 +23,9 @@ public class OrderItemAdapter extends RecyclerView.Adapter<OrderItemAdapter.View
     private int orderStatus;
     private int userId;
     private OnOrderItemActionListener actionListener;
-    private OnReviewClickListener reviewListener;
+    private ReviewDAO reviewDAO; // Khởi tạo 1 lần
+
+
 
     public interface OnReviewClickListener {
         void onReviewClick(OrderItem item);
@@ -40,6 +42,7 @@ public class OrderItemAdapter extends RecyclerView.Adapter<OrderItemAdapter.View
         this.orderStatus = orderStatus;
         this.userId = userId;
         this.actionListener = listener;
+        this.reviewDAO = new ReviewDAO(context); // Khởi tạo ở đây để tối ưu hiệu năng
     }
 
     @NonNull
@@ -55,22 +58,20 @@ public class OrderItemAdapter extends RecyclerView.Adapter<OrderItemAdapter.View
         holder.tvName.setText(item.getFruitName());
         holder.tvSizeAndQty.setText("Size: " + item.getSizeName() + " | SL: " + item.getQuantity());
         holder.tvPrice.setText(String.format("%,d VND", item.getPrice()));
-        ReviewDAO reviewDAO = new ReviewDAO(context);
 
         int resId = context.getResources().getIdentifier(item.getFruitImage(), "drawable", context.getPackageName());
         holder.imgFruit.setImageResource(resId);
+
         if (orderStatus == DBHelper.STATUS_SUCCESS) {
+            // Check database nhanh hơn vì DAO đã có sẵn
             boolean alreadyReviewed = reviewDAO.isAlreadyReviewed(userId, item.getFruitId());
+            holder.btnAction.setVisibility(View.VISIBLE);
 
             if (!alreadyReviewed) {
-                // TRƯỜNG HỢP 1: CHƯA ĐÁNH GIÁ -> HIỆN NÚT ĐÁNH GIÁ
-                holder.btnAction.setVisibility(View.VISIBLE);
                 holder.btnAction.setText("Đánh giá");
                 holder.btnAction.setTextColor(Color.parseColor("#FF4500"));
                 holder.btnAction.setOnClickListener(v -> actionListener.onReview(item));
             } else {
-                // TRƯỜNG HỢP 2: ĐÃ ĐÁNH GIÁ -> HIỆN NÚT XÓA ĐÁNH GIÁ
-                holder.btnAction.setVisibility(View.VISIBLE);
                 holder.btnAction.setText("Xóa đánh giá");
                 holder.btnAction.setTextColor(Color.GRAY);
                 holder.btnAction.setOnClickListener(v -> actionListener.onDeleteReview(item));

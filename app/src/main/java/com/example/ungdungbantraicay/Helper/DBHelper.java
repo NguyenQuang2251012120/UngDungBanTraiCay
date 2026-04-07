@@ -9,7 +9,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     // Tên và Phiên bản Database
     private static final String DB_NAME = "FruitShop.db";
-    private static final int DB_VERSION = 5; // Tăng version lên vì thêm bảng Review
+    private static final int DB_VERSION = 6; // Tăng version lên vì thêm bảng Review
 
     // =============================================================
     // ĐỊNH NGHĨA TÊN BẢNG VÀ CỘT (CONSTANTS)
@@ -25,11 +25,13 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String COL_USER_PHONE = "phone";
     public static final String COL_USER_ADDRESS = "address";
     public static final String COL_USER_ROLE = "role";
+    public static final String COL_USER_STATUS = "status";
 
     // Bảng Category
     public static final String TABLE_CATEGORY = "Category";
     public static final String COL_CAT_ID = "id";
     public static final String COL_CAT_NAME = "name";
+    public static final String COL_CAT_STATUS = "status";
 
     // Bảng Fruit
     public static final String TABLE_FRUIT = "Fruit";
@@ -104,11 +106,13 @@ public class DBHelper extends SQLiteOpenHelper {
             + COL_USER_EMAIL + " TEXT, "
             + COL_USER_PHONE + " TEXT, "
             + COL_USER_ADDRESS + " TEXT, "
-            + COL_USER_ROLE + " TEXT)";
+            + COL_USER_ROLE + " TEXT, "
+            + COL_USER_STATUS + " INTEGER DEFAULT 1)"; // Thêm cột status
 
     private static final String CREATE_TABLE_CATEGORY = "CREATE TABLE " + TABLE_CATEGORY + " ("
             + COL_CAT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-            + COL_CAT_NAME + " TEXT)";
+            + COL_CAT_NAME + " TEXT, "
+            + COL_CAT_STATUS + " INTEGER DEFAULT 1)"; // Thêm cột status
 
     private static final String CREATE_TABLE_FRUIT = "CREATE TABLE " + TABLE_FRUIT + " ("
             + COL_FRUIT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "

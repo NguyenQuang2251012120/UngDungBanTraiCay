@@ -16,13 +16,15 @@ public class Fruit implements Serializable {
     public Fruit() {
     }
 
-    public Fruit(int id, String name, String description, String image, int categoryId, int status) {
+    public Fruit(int id, String name, String description, String image,
+                 int categoryId, int status, float averageRating) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.image = image;
         this.categoryId = categoryId;
         this.status = status;
+        this.averageRating = averageRating;
     }
 
     // Getter và Setter cho status

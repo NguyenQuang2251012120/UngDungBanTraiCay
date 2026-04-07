@@ -11,14 +11,15 @@ public class FruitSize implements Serializable {
     private int quantity = 1;
     private int status;
 
-    public FruitSize() {
-    }
+    public FruitSize() {}
 
-    public FruitSize(int id, int fruitId, String size, int price) {
+    // Constructor đầy đủ để dùng trong DAO
+    public FruitSize(int id, int fruitId, String size, int price, int status) {
         this.id = id;
         this.fruitId = fruitId;
         this.size = size;
         this.price = price;
+        this.status = status;
     }
 
     public int getId() { return id; }
@@ -37,7 +38,10 @@ public class FruitSize implements Serializable {
 
     public void setPrice(int price) { this.price = price; }
     public int getQuantity() { return quantity; }
+
     public void setQuantity(int quantity) { this.quantity = quantity; }
+
     public int getStatus() { return status; }
+
     public void setStatus(int status) { this.status = status; }
 }

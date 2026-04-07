@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/menu_user"
+        android:title="Quản lý người dùng"
+        android:icon="@drawable/ic_user"/>
+
+    <item
+        android:id="@+id/menu_fruit"
+        android:title="Quản lý trái cây"
+        android:icon="@drawable/ic_fruits"/>
+
+    <item
+        android:id="@+id/menu_catergory"
+        android:title="Quản lý danh mục"
+        android:icon="@drawable/ic_category"/>
+
+    <item
+        android:id="@+id/menu_order"
+        android:title="Thống kê và hóa đơn"
+        android:icon="@drawable/ic_order"/>
+
+    <item
+        android:id="@+id/menu_profile"
+        android:title="Tài khoản"
+        android:icon="@drawable/ic_user"/>
+
+</menu>

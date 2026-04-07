@@ -45,9 +45,7 @@ public class CartFragment extends Fragment {
 
         loadData();
 
-        view.findViewById(R.id.btnCheckout).setOnClickListener(v -> {
-            handleCheckout();
-        });
+        view.findViewById(R.id.btnCheckout).setOnClickListener(v -> handleCheckout());
 
         return view;
     }
@@ -55,45 +53,96 @@ public class CartFragment extends Fragment {
     private void loadData() {
         if (userId != -1) {
             cartList = cartDAO.getItemsByUserId(userId);
-            adapter = new CartAdapter(getContext(), cartList, this::calculateTotal);
+
+            // Triển khai Interface mới từ CartAdapter
+            adapter = new CartAdapter(getContext(), cartList, new CartAdapter.CartUpdateListener() {
+                @Override
+                public void onIncreaseQuantity(CartItem item, int position) {
+                    int newQty = item.getQuantity() + 1;
+                    updateCartQuantity(item, newQty, position);
+                }
+
+                @Override
+                public void onDecreaseQuantity(CartItem item, int position) {
+                    if (item.getQuantity() > 1) {
+                        int newQty = item.getQuantity() - 1;
+                        updateCartQuantity(item, newQty, position);
+                    }
+                }
+
+                @Override
+                public void onDeleteItem(CartItem item, int position) {
+                    deleteCartItem(item, position);
+                }
+            });
+
             recyclerCart.setLayoutManager(new LinearLayoutManager(getContext()));
             recyclerCart.setAdapter(adapter);
             calculateTotal();
         }
     }
 
-    private int calculateTotalValue() {
+    // --- CÁC HÀM XỬ LÝ LOGIC NGHIỆP VỤ (Vừa DB vừa UI) ---
+
+    private void updateCartQuantity(CartItem item, int newQty, int position) {
+        // 1. Cập nhật SQLite
+        cartDAO.updateQuantity(item.getId(), newQty);
+
+        // 2. Cập nhật Object trong list hiện tại
+        item.setQuantity(newQty);
+
+        // 3. Báo Adapter vẽ lại đúng dòng đó
+        adapter.notifyItemChanged(position);
+
+        // 4. Tính lại tổng tiền trên màn hình
+        calculateTotal();
+    }
+
+    private void deleteCartItem(CartItem item, int position) {
+        // 1. Xóa khỏi SQLite
+        cartDAO.deleteItem(item.getId());
+
+        // 2. Xóa khỏi List dữ liệu
+        cartList.remove(position);
+
+        // 3. Thông báo hiệu ứng xóa cho RecyclerView
+        adapter.notifyItemRemoved(position);
+        adapter.notifyItemRangeChanged(position, cartList.size());
+
+        // 4. Tính lại tổng tiền
+        calculateTotal();
+    }
+
+    private void calculateTotal() {
         int total = 0;
         if (cartList != null) {
             for (CartItem item : cartList) {
                 total += (item.getPrice() * item.getQuantity());
             }
         }
-        return total;
-    }
-
-    private void calculateTotal() {
-        int total = calculateTotalValue();
         tvTotalPrice.setText(String.format("%,d VND", total));
     }
 
-    // --- LOGIC THANH TOÁN CÓ ĐỊA CHỈ ---
+    private int calculateTotalValue() {
+        int total = 0;
+        for (CartItem item : cartList) total += (item.getPrice() * item.getQuantity());
+        return total;
+    }
+
+    // --- LOGIC THANH TOÁN GIỮ NGUYÊN NHƯNG GỌI HÀM SẠCH SẼ HƠN ---
     private void handleCheckout() {
         if (cartList == null || cartList.isEmpty()) {
             Toast.makeText(getContext(), "Giỏ hàng rỗng!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 1. Lấy địa chỉ mặc định của User từ Database
         UserDAO userDAO = new UserDAO(getContext());
         String defaultAddress = userDAO.getAddressByUserId(userId);
 
-        // 2. Tạo EditText để khách nhập/sửa địa chỉ
         final EditText edtAddress = new EditText(getContext());
         edtAddress.setHint("Nhập địa chỉ nhận hàng...");
-        edtAddress.setText(defaultAddress); // Tự điền địa chỉ cũ nếu có
+        edtAddress.setText(defaultAddress);
 
-        // Thêm lề (padding) cho EditText để giao diện cân đối
         FrameLayout container = new FrameLayout(getContext());
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -101,11 +150,10 @@ public class CartFragment extends Fragment {
         edtAddress.setLayoutParams(params);
         container.addView(edtAddress);
 
-        // 3. Hiện Dialog xác nhận
         new AlertDialog.Builder(getContext())
                 .setTitle("Xác nhận đơn hàng")
                 .setMessage("Kiểm tra lại địa chỉ giao hàng của bạn:")
-                .setView(container) // Đưa ô nhập địa chỉ vào Dialog
+                .setView(container)
                 .setPositiveButton("Đặt ngay", (dialog, which) -> {
                     String finalAddress = edtAddress.getText().toString().trim();
                     if (finalAddress.isEmpty()) {
@@ -122,7 +170,6 @@ public class CartFragment extends Fragment {
         OrderDAO orderDAO = new OrderDAO(getContext());
         int total = calculateTotalValue();
 
-        // Gửi địa chỉ thật từ Dialog vào hàm placeOrder
         boolean isSuccess = orderDAO.placeOrder(userId, total, finalAddress, cartList);
 
         if (isSuccess) {

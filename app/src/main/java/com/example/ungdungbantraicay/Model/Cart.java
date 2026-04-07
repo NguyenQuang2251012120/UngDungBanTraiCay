@@ -23,8 +23,6 @@ public class Cart implements Serializable {
     public int getUserId() { return userId; }
 
     public void setUserId(int userId) { this.userId = userId; }
-
     public String getCreatedAt() { return createdAt; }
-
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 }
