@@ -1,66 +1,80 @@
 package com.example.ungdungbantraicay.AdminFragments;
 
+import android.database.Cursor;
 import android.os.Bundle;
-
 import androidx.fragment.app.Fragment;
-
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import android.view.*;
+import android.widget.Button;
+import com.example.ungdungbantraicay.Adapter.UserAdapter;
+import com.example.ungdungbantraicay.DAO.UserDAO;
+import com.example.ungdungbantraicay.Model.User;
 import com.example.ungdungbantraicay.R;
+import com.example.ungdungbantraicay.Activities.AddUserActivity;
+import android.content.Intent;
+import android.widget.EditText;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link AdminUserFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.*;
+
 public class AdminUserFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    RecyclerView recycler;
+    Button btnAdd;
+    ArrayList<User> list;
+    UserAdapter adapter;
+    UserDAO dao;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    EditText edtSearch;
 
-    public AdminUserFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment AdminUserFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static AdminUserFragment newInstance(String param1, String param2) {
-        AdminUserFragment fragment = new AdminUserFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        View view = inflater.inflate(R.layout.fragment_admin_user, container, false);
+
+        recycler = view.findViewById(R.id.recyclerUser);
+        btnAdd = view.findViewById(R.id.btnAddUser);
+
+        dao = new UserDAO(getContext());
+        list = new ArrayList<>();
+
+        recycler.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new UserAdapter(getContext(), list);
+        recycler.setAdapter(adapter);
+
+        loadData();
+
+        btnAdd.setOnClickListener(v ->
+                startActivity(new Intent(getContext(), AddUserActivity.class)));
+
+        return view;
+    }
+
+    private void loadData() {
+        Cursor c = dao.getAllUsers();
+        list.clear();
+
+        while (c.moveToNext()) {
+            list.add(new User(
+                    c.getInt(c.getColumnIndexOrThrow("id")),
+                    c.getString(c.getColumnIndexOrThrow("username")),
+                    c.getString(c.getColumnIndexOrThrow("password")),
+                    c.getString(c.getColumnIndexOrThrow("fullname")),
+                    c.getString(c.getColumnIndexOrThrow("email")),
+                    c.getString(c.getColumnIndexOrThrow("phone")),
+                    c.getString(c.getColumnIndexOrThrow("address")),
+                    c.getString(c.getColumnIndexOrThrow("role")),
+                    c.getInt(c.getColumnIndexOrThrow("status"))
+            ));
         }
+
+        adapter.notifyDataSetChanged();
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_admin_user, container, false);
+    public void onResume() {
+        super.onResume();
+        loadData();
     }
 }

@@ -149,4 +149,48 @@ public class UserDAO {
         cursor.close();
         return address;
     }
+
+    public void createAdminIfNotExists() { // ham tao tai khoan admin tam thoi
+        Cursor cursor = database.rawQuery(
+                "SELECT * FROM " + TABLE_USER + " WHERE " + DBHelper.COL_USER_NAME + "=?",
+                new String[]{"admin"}
+        );
+        if (!cursor.moveToFirst()) {
+            ContentValues values = new ContentValues();
+            values.put(DBHelper.COL_USER_NAME, "admin");
+            values.put(DBHelper.COL_USER_PASS, "123456");
+            values.put(DBHelper.COL_USER_FULLNAME, "Administrator");
+            values.put(DBHelper.COL_USER_EMAIL, "admin@gmail.com");
+            values.put(DBHelper.COL_USER_PHONE, "0000000000");
+            values.put(DBHelper.COL_USER_ROLE, "admin"); //
+            values.put(DBHelper.COL_USER_STATUS, 1);
+
+            database.insert(TABLE_USER, null, values);
+        }
+
+        cursor.close();
+    }
+
+    public Cursor getAllUsers() {
+        return database.rawQuery("SELECT * FROM " + TABLE_USER, null);
+    }
+
+    public boolean deleteUser(int id) {
+        int rows = database.delete(TABLE_USER, "id=?", new String[]{String.valueOf(id)});
+        return rows > 0;
+    }
+
+    public boolean updateRole(int id, String role) {
+        ContentValues values = new ContentValues();
+        values.put(DBHelper.COL_USER_ROLE, role);
+        int rows = database.update(TABLE_USER, values, "id=?", new String[]{String.valueOf(id)});
+        return rows > 0;
+    }
+
+    public Cursor searchUser(String keyword){
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        String query = "SELECT * FROM users WHERE username LIKE ?";
+        return db.rawQuery(query, new String[]{"%" + keyword + "%"});
+    }
 }
