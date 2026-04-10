@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.UngDungBanTraiCay">
         <activity
+            android:name=".Activities.AdminChangePasswordActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activities.AdminEditProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".Activities.AdminMainActivity"
             android:exported="false" />
         <activity

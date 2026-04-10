@@ -22,19 +22,18 @@ public class OrderDAO {
     }
 
     // HÀM QUAN TRỌNG: Thực hiện đặt hàng
-    public boolean placeOrder(int userId, int totalPrice, String address, List<CartItem> items) {
+    public boolean placeOrder(int userId, int totalPrice, String address, String name, String phone, List<CartItem> items) {
         database.beginTransaction();
         try {
             ContentValues orderValues = new ContentValues();
             orderValues.put(DBHelper.COL_ORDER_USER_ID, userId);
             orderValues.put(DBHelper.COL_ORDER_TOTAL, totalPrice);
             orderValues.put(DBHelper.COL_ORDER_STATUS, DBHelper.STATUS_PENDING);
-
-            // LƯU ĐỊA CHỈ TẠI THỜI ĐIỂM ĐẶT HÀNG
             orderValues.put(DBHelper.COL_ORDER_ADDRESS, address);
+            orderValues.put(DBHelper.COL_ORDER_RECEIVER_NAME, name); // Lưu tên người nhận
+            orderValues.put(DBHelper.COL_ORDER_RECEIVER_PHONE, phone); // Lưu số điện thoại
 
             long orderId = database.insert(DBHelper.TABLE_ORDER, null, orderValues);
-
             if (orderId == -1) return false;
 
             // 2. Duyệt danh sách món trong giỏ để chép sang OrderItem
@@ -65,28 +64,27 @@ public class OrderDAO {
         } catch (Exception e) {
             return false;
         } finally {
-            // Kết thúc giao dịch (Nếu không thành công, mọi thay đổi sẽ bị Rollback - hoàn tác)
             database.endTransaction();
         }
-
     }
-
+    // 2. Sửa hàm lấy danh sách đơn hàng
     public List<Order> getOrdersByUserId(int userId) {
         List<Order> list = new ArrayList<>();
-        String sql = "SELECT * FROM " + DBHelper.TABLE_ORDER +
-                " WHERE " + DBHelper.COL_ORDER_USER_ID + " = ?" +
-                " ORDER BY " + DBHelper.COL_ORDER_ID + " DESC";
-
+        String sql = "SELECT * FROM " + DBHelper.TABLE_ORDER + " WHERE user_id = ? ORDER BY id DESC";
         Cursor cursor = database.rawQuery(sql, new String[]{String.valueOf(userId)});
+
         if (cursor.moveToFirst()) {
             do {
                 Order order = new Order();
-                order.setId(cursor.getInt(0));
-                order.setUserId(cursor.getInt(1));
-                order.setTotalPrice(cursor.getInt(2));
-                order.setStatus(cursor.getInt(3));
-                order.setAddress(cursor.getString(4)); // Cột address chúng ta mới thêm
-                order.setCreatedAt(cursor.getString(5));
+                order.setId(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_ID)));
+                order.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_USER_ID)));
+                order.setTotalPrice(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_TOTAL)));
+                order.setStatus(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_STATUS)));
+                order.setAddress(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_ADDRESS)));
+                order.setCreatedAt(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_DATE)));
+                // Đọc 2 trường mới
+                order.setReceiverName(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_RECEIVER_NAME)));
+                order.setReceiverPhone(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_RECEIVER_PHONE)));
                 list.add(order);
             } while (cursor.moveToNext());
         }
@@ -125,5 +123,23 @@ public class OrderDAO {
         }
         if (cursor != null) cursor.close();
         return list;
+    }
+
+    // Lấy toàn bộ đơn hàng (kèm tên User qua JOIN)
+    public Cursor getAllOrdersWithUserInfo() {
+        // Thay JOIN bằng LEFT JOIN
+        String query = "SELECT o.*, u." + DBHelper.COL_USER_FULLNAME +
+                " FROM " + DBHelper.TABLE_ORDER + " o " +
+                " LEFT JOIN " + DBHelper.TABLE_USER + " u ON o." + DBHelper.COL_ORDER_USER_ID + " = u." + DBHelper.COL_USER_ID +
+                " ORDER BY o." + DBHelper.COL_ORDER_ID + " DESC";
+        return database.rawQuery(query, null);
+    }
+
+    // Cập nhật trạng thái đơn hàng
+    public boolean updateOrderStatus(int orderId, int newStatus) {
+        ContentValues values = new ContentValues();
+        values.put(DBHelper.COL_ORDER_STATUS, newStatus);
+        return database.update(DBHelper.TABLE_ORDER, values,
+                DBHelper.COL_ORDER_ID + "=?", new String[]{String.valueOf(orderId)}) > 0;
     }
 }

@@ -43,12 +43,15 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Order order = list.get(position);
 
-        // Hiển thị dữ liệu
         holder.tvId.setText("Mã đơn: #" + order.getId());
         holder.tvDate.setText("Ngày đặt: " + order.getCreatedAt());
-        holder.tvAddress.setText("Giao đến: " + order.getAddress());
-        holder.tvTotal.setText(String.format("Tổng tiền: %,d VND", order.getTotalPrice()));
 
+        // Hiển thị Tên - SĐT người nhận
+        String receiverInfo = "Người nhận: " + order.getReceiverName() + " (" + order.getReceiverPhone() + ")";
+        holder.tvReceiver.setText(receiverInfo);
+
+        holder.tvAddress.setText("Địa chỉ: " + order.getAddress());
+        holder.tvTotal.setText(String.format("Tổng tiền: %,d VND", order.getTotalPrice()));
         String statusName = DBHelper.getStatusName(order.getStatus());
         holder.tvStatus.setText(statusName);
 
@@ -76,7 +79,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
     public int getItemCount() { return list != null ? list.size() : 0; }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvId, tvStatus, tvDate, tvAddress, tvTotal;
+        TextView tvId, tvStatus, tvDate, tvAddress, tvTotal, tvReceiver;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvId = itemView.findViewById(R.id.tvOrderId);
@@ -84,6 +87,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             tvDate = itemView.findViewById(R.id.tvOrderDate);
             tvAddress = itemView.findViewById(R.id.tvOrderAddress);
             tvTotal = itemView.findViewById(R.id.tvOrderTotal);
+            tvReceiver = itemView.findViewById(R.id.tvOrderReceiver);
         }
     }
 }

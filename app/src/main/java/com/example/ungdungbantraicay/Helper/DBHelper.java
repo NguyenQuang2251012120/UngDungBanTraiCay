@@ -80,6 +80,8 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String COL_ORDER_STATUS = "status";
     public static final String COL_ORDER_ADDRESS = "delivery_address";
     public static final String COL_ORDER_DATE = "created_at";
+    public static final String COL_ORDER_RECEIVER_NAME = "receiver_name";
+    public static final String COL_ORDER_RECEIVER_PHONE = "receiver_phone";
 
     // Bảng OrderItem (Chi tiết đơn hàng)
     public static final String TABLE_ORDER_ITEM = "OrderItem";
@@ -161,8 +163,10 @@ public class DBHelper extends SQLiteOpenHelper {
             + COL_ORDER_USER_ID + " INTEGER, "
             + COL_ORDER_TOTAL + " INTEGER, "
             + COL_ORDER_STATUS + " INTEGER DEFAULT 0, "
-            + COL_ORDER_ADDRESS + " TEXT, " // <--- THÊM DÒNG NÀY
+            + COL_ORDER_ADDRESS + " TEXT, "
             + COL_ORDER_DATE + " TEXT DEFAULT CURRENT_TIMESTAMP, "
+            + COL_ORDER_RECEIVER_NAME + " TEXT, " // Cột mới 1
+            + COL_ORDER_RECEIVER_PHONE + " TEXT, " // Cột mới 2
             + "FOREIGN KEY(" + COL_ORDER_USER_ID + ") REFERENCES " + TABLE_USER + "(" + COL_USER_ID + "))";
 
     private static final String CREATE_TABLE_ORDER_ITEM = "CREATE TABLE " + TABLE_ORDER_ITEM + " ("

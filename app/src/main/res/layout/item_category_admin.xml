@@ -7,28 +7,41 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="10dp">
 
         <TextView
             android:id="@+id/tvCategoryName"
-            android:layout_width="250dp"
+            android:layout_width="220dp"
             android:layout_height="wrap_content"
             android:textSize="18sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvStatus"
-            android:layout_width="80dp"
+            android:layout_width="70dp"
             android:layout_height="wrap_content"
             android:text="Hiện"
             android:textColor="@android:color/holo_green_dark" />
 
         <ImageButton
             android:id="@+id/btnEdit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:src="@android:drawable/ic_menu_edit"
+            android:contentDescription="Sửa"
             android:background="?attr/selectableItemBackgroundBorderless"/>
+
+        <ImageButton
+            android:id="@+id/btnDeleteCategory"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_delete"
+            android:contentDescription="Xóa"
+            app:tint="@android:color/holo_red_dark"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:background="?attr/selectableItemBackgroundBorderless"/>
+
     </LinearLayout>
 </HorizontalScrollView>

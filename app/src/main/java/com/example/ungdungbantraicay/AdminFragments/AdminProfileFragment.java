@@ -1,66 +1,97 @@
 package com.example.ungdungbantraicay.AdminFragments;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.*;
 
+import androidx.fragment.app.Fragment;
+
+import com.example.ungdungbantraicay.Activities.AdminChangePasswordActivity;
+import com.example.ungdungbantraicay.Activities.AdminEditProfileActivity;
+import com.example.ungdungbantraicay.Activities.ChangePasswordActivity;
+import com.example.ungdungbantraicay.Activities.EditProfileActivity;
+import com.example.ungdungbantraicay.Activities.LoginActivity;
+import com.example.ungdungbantraicay.DAO.UserDAO;
+import com.example.ungdungbantraicay.Model.User;
 import com.example.ungdungbantraicay.R;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link AdminProfileFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class AdminProfileFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    TextView txtUsername, txtFullname, txtEmail, txtPhone, txtAddress;
+    Button btnEditProfile, btnChangePassword, btnLogout;
+    UserDAO userDAO;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    public AdminProfileFragment() {}
 
-    public AdminProfileFragment() {
-        // Required empty public constructor
-    }
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_admin_profile, container, false);
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment AdminProfileFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static AdminProfileFragment newInstance(String param1, String param2) {
-        AdminProfileFragment fragment = new AdminProfileFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
+        // Ánh xạ View chính xác với XML
+        txtUsername = view.findViewById(R.id.txtUsername);
+        txtFullname = view.findViewById(R.id.txtFullname);
+        txtEmail = view.findViewById(R.id.txtEmail);
+        txtPhone = view.findViewById(R.id.txtPhone);
+        txtAddress = view.findViewById(R.id.txtAddress);
+        btnEditProfile = view.findViewById(R.id.btnEditProfile);
+        btnChangePassword = view.findViewById(R.id.btnChangePassword);
+        btnLogout = view.findViewById(R.id.btnLogout);
+
+        userDAO = new UserDAO(getActivity());
+
+        // Load dữ liệu lần đầu
+        loadUser();
+
+        btnEditProfile.setOnClickListener(v -> {
+            startActivity(new Intent(getActivity(), AdminEditProfileActivity.class));
+        });
+
+        btnChangePassword.setOnClickListener(v -> {
+            startActivity(new Intent(getActivity(), AdminChangePasswordActivity.class));
+        });
+
+        btnLogout.setOnClickListener(v -> {
+            new androidx.appcompat.app.AlertDialog.Builder(getActivity())
+                    .setTitle("Xác nhận")
+                    .setMessage("Bạn có chắc chắn muốn đăng xuất?")
+                    .setPositiveButton("Đăng xuất", (dialog, which) -> {
+                        SharedPreferences prefs = getActivity().getSharedPreferences("USER_FILE", Context.MODE_PRIVATE);
+                        prefs.edit().clear().apply();
+                        startActivity(new Intent(getActivity(), LoginActivity.class));
+                        getActivity().finish();
+                    })
+                    .setNegativeButton("Hủy", null)
+                    .show();
+        });
+
+        return view;
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+    public void onResume() {
+        super.onResume();
+        loadUser(); // Cập nhật lại nếu người dùng vừa sửa thông tin ở màn hình khác quay về
+    }
+
+    private void loadUser() {
+        SharedPreferences prefs = getActivity().getSharedPreferences("USER_FILE", Context.MODE_PRIVATE);
+        String username = prefs.getString("username", "");
+
+        User user = userDAO.getUserInfo(username);
+
+        if (user != null) {
+            txtUsername.setText("@" + user.getUsername());
+            txtFullname.setText(user.getFullname());
+            txtEmail.setText(user.getEmail());
+            txtPhone.setText(user.getPhone());
+            txtAddress.setText(user.getAddress());
         }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_admin_profile, container, false);
     }
 }

@@ -2,6 +2,9 @@ package com.example.ungdungbantraicay.Activities;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,11 +15,8 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.ungdungbantraicay.DAO.UserDAO;
 import com.example.ungdungbantraicay.Model.User;
 import com.example.ungdungbantraicay.R;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;
 
-public class EditProfileActivity extends AppCompatActivity {
+public class AdminEditProfileActivity extends AppCompatActivity {
 
     EditText edtFullname, edtUsername, edtEmail, edtPhone, edtAddress;
     Button btnUpdate;
@@ -26,7 +26,7 @@ public class EditProfileActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit_profile);
+        setContentView(R.layout.activity_admin_edit_profile);
 
         // ánh xạ view trước
         edtFullname = findViewById(R.id.edtFullname);

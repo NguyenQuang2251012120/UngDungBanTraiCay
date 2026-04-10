@@ -88,4 +88,14 @@ public class CategoryDAO {
         return database.update(DBHelper.TABLE_CATEGORY, values,
                 DBHelper.COL_CAT_ID + "=?", new String[]{String.valueOf(category.getId())}) > 0;
     }
+
+    public boolean deleteCategory(int id) {
+        try {
+            return database.delete(DBHelper.TABLE_CATEGORY,
+                    DBHelper.COL_CAT_ID + "=?", new String[]{String.valueOf(id)}) > 0;
+        } catch (Exception e) {
+            // Trả về false nếu vướng ràng buộc khóa ngoại (đang có Trái cây thuộc danh mục này)
+            return false;
+        }
+    }
 }
