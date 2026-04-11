@@ -2,7 +2,7 @@ package com.example.ungdungbantraicay.Activities;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
+import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -15,11 +15,9 @@ import com.example.ungdungbantraicay.R;
 
 public class EditProfileActivity extends AppCompatActivity {
 
-    // 1. Khai báo các View
     private EditText edtFullname, edtUsername, edtEmail, edtPhone, edtAddress;
     private Button btnUpdate;
 
-    // 2. Khai báo các đối tượng dữ liệu
     private UserDAO userDAO;
     private User currentUser;
     private String currentUsernamePref;
@@ -29,26 +27,18 @@ public class EditProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_profile);
 
-        // Khởi tạo View
         initViews();
-
-        // Khởi tạo DAO
         userDAO = new UserDAO(this);
 
-        // Lấy thông tin user hiện tại từ SharedPreferences
+        // Lấy username từ SharedPreferences để xác định ai đang đăng nhập
         SharedPreferences prefs = getSharedPreferences("USER_FILE", MODE_PRIVATE);
         currentUsernamePref = prefs.getString("username", "");
 
-        // Tải dữ liệu lên Form
         loadUserData();
 
-        // Thiết lập sự kiện
         btnUpdate.setOnClickListener(v -> handleUpdate());
     }
 
-    /**
-     * Ánh xạ các View từ Layout
-     */
     private void initViews() {
         edtFullname = findViewById(R.id.edtFullname);
         edtUsername = findViewById(R.id.edtUsername);
@@ -58,9 +48,6 @@ public class EditProfileActivity extends AppCompatActivity {
         btnUpdate = findViewById(R.id.btnUpdate);
     }
 
-    /**
-     * Lấy dữ liệu từ Database và hiển thị lên giao diện
-     */
     private void loadUserData() {
         currentUser = userDAO.getUserInfo(currentUsernamePref);
 
@@ -72,16 +59,14 @@ public class EditProfileActivity extends AppCompatActivity {
             edtAddress.setText(currentUser.getAddress());
         } else {
             Toast.makeText(this, "Không tìm thấy thông tin người dùng", Toast.LENGTH_SHORT).show();
+            finish();
         }
     }
 
-    /**
-     * Xử lý logic cập nhật thông tin
-     */
     private void handleUpdate() {
         if (currentUser == null) return;
 
-        // 1. Lấy dữ liệu từ EditText
+        // 1. Lấy dữ liệu
         String newUsername = edtUsername.getText().toString().trim();
         String name = edtFullname.getText().toString().trim();
         String email = edtEmail.getText().toString().trim();
@@ -89,42 +74,66 @@ public class EditProfileActivity extends AppCompatActivity {
         String address = edtAddress.getText().toString().trim();
         String oldUsername = currentUser.getUsername();
 
-        // 2. Kiểm tra dữ liệu đầu vào (Validation)
-        if (name.isEmpty() || newUsername.isEmpty() || email.isEmpty() || phone.isEmpty() || address.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+        // 2. VALIDATION (Đồng bộ logic với RegisterActivity)
+
+        // Kiểm tra họ tên
+        if (name.isEmpty()) {
+            edtFullname.setError("Họ tên không được để trống");
             return;
         }
 
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Toast.makeText(this, "Email không hợp lệ", Toast.LENGTH_SHORT).show();
+        // Kiểm tra username (tối thiểu 5 ký tự)
+        if (newUsername.length() < 5) {
+            edtUsername.setError("Tên đăng nhập tối thiểu 5 ký tự");
             return;
         }
 
-        // 3. Xử lý logic đổi tên đăng nhập (nếu có)
+        // Kiểm tra Email định dạng
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            edtEmail.setError("Email không đúng định dạng");
+            return;
+        }
+
+        // Kiểm tra Số điện thoại (10-11 số)
+        if (phone.length() < 10 || phone.length() > 11) {
+            edtPhone.setError("Số điện thoại phải từ 10-11 số");
+            return;
+        }
+
+        if (address.isEmpty()) {
+            edtAddress.setError("Địa chỉ không được để trống");
+            return;
+        }
+
+        // 3. KIỂM TRA TRÙNG TÊN ĐĂNG NHẬP (Nếu người dùng đổi tên mới)
         if (!newUsername.equals(oldUsername)) {
-            if (userDAO.checkUsernameExists(newUsername)) {
-                Toast.makeText(this, "Tên đăng nhập đã tồn tại!", Toast.LENGTH_SHORT).show();
+            // Sử dụng checkUsername giống bên Register để đảm bảo không trùng
+            if (userDAO.checkUsername(newUsername)) {
+                edtUsername.setError("Tên đăng nhập này đã có người sử dụng!");
                 return;
             }
-            // Cập nhật lại SharedPreferences nếu đổi username thành công
-            SharedPreferences pref = getSharedPreferences("USER_FILE", MODE_PRIVATE);
-            pref.edit().putString("username", newUsername).apply();
-            currentUser.setUsername(newUsername);
         }
 
-        // 4. Cập nhật đối tượng user
+        // 4. THỰC HIỆN CẬP NHẬT
+        currentUser.setUsername(newUsername);
         currentUser.setFullname(name);
         currentUser.setEmail(email);
         currentUser.setPhone(phone);
         currentUser.setAddress(address);
 
-        // 5. Ghi vào database
         if (userDAO.updateUserWithId(currentUser)) {
-            Toast.makeText(this, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
-            setResult(RESULT_OK); // Thông báo cho màn hình trước đó nếu cần load lại
+            // Nếu đổi username thành công, phải cập nhật lại SharedPreferences
+            // để lần sau vào App vẫn lấy được dữ liệu mới
+            if (!newUsername.equals(oldUsername)) {
+                SharedPreferences pref = getSharedPreferences("USER_FILE", MODE_PRIVATE);
+                pref.edit().putString("username", newUsername).apply();
+            }
+
+            Toast.makeText(this, "Cập nhật thành công!", Toast.LENGTH_SHORT).show();
+            setResult(RESULT_OK);
             finish();
         } else {
-            Toast.makeText(this, "Cập nhật thất bại, vui lòng thử lại", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Lỗi cập nhật, vui lòng thử lại sau!", Toast.LENGTH_SHORT).show();
         }
     }
 }
