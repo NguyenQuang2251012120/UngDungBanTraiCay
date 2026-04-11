@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.ungdungbantraicay.DAO.CartDAO;
+import com.example.ungdungbantraicay.Helper.ImageHelper;
 import com.example.ungdungbantraicay.Model.CartItem;
 import com.example.ungdungbantraicay.R;
 
@@ -52,8 +53,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
         holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
 
         int resId = context.getResources().getIdentifier(item.getFruitImage(), "drawable", context.getPackageName());
-        holder.imgFruit.setImageResource(resId);
-
+        ImageHelper.loadFruitImage(context, item.getFruitImage(), holder.imgFruit);
         // Bắt sự kiện và gửi ngược lại cho Fragment/Activity xử lý
         holder.btnPlus.setOnClickListener(v -> {
             if (listener != null) listener.onIncreaseQuantity(item, position);

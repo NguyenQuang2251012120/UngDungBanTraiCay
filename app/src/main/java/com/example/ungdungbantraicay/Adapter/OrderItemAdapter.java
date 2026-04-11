@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.ungdungbantraicay.DAO.ReviewDAO;
 import com.example.ungdungbantraicay.Helper.DBHelper;
+import com.example.ungdungbantraicay.Helper.ImageHelper;
 import com.example.ungdungbantraicay.Model.OrderItem;
 import com.example.ungdungbantraicay.R;
 import java.util.List;
@@ -60,7 +61,7 @@ public class OrderItemAdapter extends RecyclerView.Adapter<OrderItemAdapter.View
         holder.tvPrice.setText(String.format("%,d VND", item.getPrice()));
 
         int resId = context.getResources().getIdentifier(item.getFruitImage(), "drawable", context.getPackageName());
-        holder.imgFruit.setImageResource(resId);
+        ImageHelper.loadFruitImage(context, item.getFruitImage(), holder.imgFruit);
 
         if (orderStatus == DBHelper.STATUS_SUCCESS) {
             // Check database nhanh hơn vì DAO đã có sẵn

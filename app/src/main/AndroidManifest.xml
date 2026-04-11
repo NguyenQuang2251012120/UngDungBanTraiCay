@@ -12,13 +12,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.UngDungBanTraiCay">
         <activity
-            android:name=".Activities.AdminChangePasswordActivity"
+            android:name=".AdminFragments.AdminFruitSizeActivity"
             android:exported="false" />
         <activity
-            android:name=".Activities.AdminEditProfileActivity"
+            android:name=".AdminFragments.AdminChangePasswordActivity"
             android:exported="false" />
         <activity
-            android:name=".Activities.AdminMainActivity"
+            android:name=".AdminFragments.AdminEditProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AdminFragments.AdminMainActivity"
             android:exported="false" />
         <activity
             android:name=".Activities.OrderDetailActivity"
@@ -46,7 +49,19 @@
             android:exported="false" />
         <activity
             android:name=".Activities.HomeActivity"
-            android:exported="false" />
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="return"
+                    android:scheme="vnpay" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".Activities.LoginActivity"
             android:exported="true">

@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.ungdungbantraicay.Helper.ImageHelper;
 import com.example.ungdungbantraicay.Model.Fruit;
 import com.example.ungdungbantraicay.R;
 import java.util.ArrayList;
@@ -44,7 +46,7 @@ public class FruitAdapter extends RecyclerView.Adapter<FruitAdapter.ViewHolder> 
 
         // Hiển thị ảnh
         int resId = context.getResources().getIdentifier(fruit.getImage(), "drawable", context.getPackageName());
-        holder.imgFruit.setImageResource(resId);
+        ImageHelper.loadFruitImage(context, fruit.getImage(), holder.imgFruit);
 
         // Hiển thị Rating
         float rating = fruit.getAverageRating();

@@ -46,23 +46,21 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         holder.tvId.setText("Mã đơn: #" + order.getId());
         holder.tvDate.setText("Ngày đặt: " + order.getCreatedAt());
 
-        // Hiển thị Tên - SĐT người nhận
         String receiverInfo = "Người nhận: " + order.getReceiverName() + " (" + order.getReceiverPhone() + ")";
         holder.tvReceiver.setText(receiverInfo);
 
         holder.tvAddress.setText("Địa chỉ: " + order.getAddress());
         holder.tvTotal.setText(String.format("Tổng tiền: %,d VND", order.getTotalPrice()));
-        String statusName = DBHelper.getStatusName(order.getStatus());
+
+        // Hiển thị thêm phương thức thanh toán
+        String methodText = (order.getPaymentMethod() == 1) ? "Thanh toán: VNPay" : "Thanh toán: Tiền mặt";
+        String statusName = DBHelper.getStatusName(order.getStatus()) + " | " + methodText;
         holder.tvStatus.setText(statusName);
 
-        // Màu sắc trạng thái
         updateStatusColor(holder.tvStatus, order.getStatus());
 
-        // --- BƯỚC 3: Bắt sự kiện click vào item và báo cho Fragment ---
         holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onOrderClick(order);
-            }
+            if (listener != null) listener.onOrderClick(order);
         });
     }
 

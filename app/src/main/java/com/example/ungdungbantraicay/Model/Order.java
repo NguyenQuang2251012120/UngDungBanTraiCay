@@ -12,11 +12,12 @@ public class Order implements Serializable {
     private String createdAt;
     private String receiverName;  // Thêm mới
     private String receiverPhone; // Thêm mới
+    private int paymentMethod;
 
 
     public Order() {}
 
-    public Order(int id, int userId, int totalPrice, int status, String address, String createdAt, String receiverName, String receiverPhone) {
+    public Order(int id, int userId, int totalPrice, int status, String address, String createdAt, String receiverName, String receiverPhone, int paymentMethod) {
         this.id = id;
         this.userId = userId;
         this.totalPrice = totalPrice;
@@ -25,6 +26,7 @@ public class Order implements Serializable {
         this.createdAt = createdAt;
         this.receiverName = receiverName;
         this.receiverPhone = receiverPhone;
+        this.paymentMethod = paymentMethod;
     }
 
     public int getId() { return id; }
@@ -44,6 +46,7 @@ public class Order implements Serializable {
     public void setReceiverName(String receiverName) { this.receiverName = receiverName; }
     public String getReceiverPhone() { return receiverPhone; }
     public void setReceiverPhone(String receiverPhone) { this.receiverPhone = receiverPhone; }
-
+    public int getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(int paymentMethod) { this.paymentMethod = paymentMethod; }
 
 }

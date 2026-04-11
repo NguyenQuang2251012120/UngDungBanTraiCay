@@ -16,7 +16,7 @@
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginBottom="15dp"
-            android:textColor="@color/black"/>
+            android:textColor="@android:color/black"/>
 
         <EditText
             android:id="@+id/edtName"
@@ -40,7 +40,35 @@
             android:layout_height="wrap_content"
             android:hint="Địa chỉ giao hàng"
             android:inputType="textPostalAddress"
-            android:layout_marginBottom="10dp"/>
+            android:layout_marginBottom="15dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Phương thức thanh toán"
+            android:textStyle="bold"
+            android:layout_marginBottom="10dp"
+            android:textColor="@android:color/black"/>
+
+        <RadioGroup
+            android:id="@+id/rgPayment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/rbCash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tiền mặt"
+                android:checked="true" />
+
+            <RadioButton
+                android:id="@+id/rbVNPay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Thanh toán qua VNPay" />
+        </RadioGroup>
 
     </LinearLayout>
 </ScrollView>

@@ -3,9 +3,7 @@ package com.example.ungdungbantraicay.AdminFragments;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,10 +11,6 @@ import android.widget.*;
 
 import androidx.fragment.app.Fragment;
 
-import com.example.ungdungbantraicay.Activities.AdminChangePasswordActivity;
-import com.example.ungdungbantraicay.Activities.AdminEditProfileActivity;
-import com.example.ungdungbantraicay.Activities.ChangePasswordActivity;
-import com.example.ungdungbantraicay.Activities.EditProfileActivity;
 import com.example.ungdungbantraicay.Activities.LoginActivity;
 import com.example.ungdungbantraicay.DAO.UserDAO;
 import com.example.ungdungbantraicay.Model.User;

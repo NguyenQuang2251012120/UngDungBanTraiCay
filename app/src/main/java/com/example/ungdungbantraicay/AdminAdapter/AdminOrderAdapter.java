@@ -39,34 +39,35 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Vi
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         if (cursor.moveToPosition(position)) {
-            // Lấy index an toàn
             int id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_ID));
             String receiverName = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_RECEIVER_NAME));
             String receiverPhone = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_RECEIVER_PHONE));
             long total = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_TOTAL));
             int status = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_STATUS));
             String date = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_DATE));
+            // Lấy phương thức thanh toán
+            int method = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_PAYMENT_METHOD));
 
             holder.tvId.setText("Mã đơn: #" + id);
-            // Hiển thị tên và sđt người nhận trực tiếp từ đơn hàng
             holder.tvCustomer.setText("Người nhận: " + receiverName + " (" + receiverPhone + ")");
             holder.tvTotal.setText("Tổng: " + NumberFormat.getCurrencyInstance(new Locale("vi","VN")).format(total));
             holder.tvDate.setText("Ngày đặt: " + date);
-            holder.tvStatus.setText("Trạng thái: " + DBHelper.getStatusName(status));
 
-            // Logic ẩn/hiện nút xử lý
+            // Hiển thị trạng thái kèm phương thức thanh toán
+            String pMethod = (method == 1) ? " (VNPay - Đã trả)" : " (Tiền mặt)";
+            holder.tvStatus.setText("Trạng thái: " + DBHelper.getStatusName(status) + pMethod);
+
+            // Đổi màu Text nếu là MoMo để Admin dễ thấy
+            if (method == 1) holder.tvStatus.setTextColor(android.graphics.Color.parseColor("#005BA1")); // Màu tím MoMo
+            else holder.tvStatus.setTextColor(android.graphics.Color.BLACK);
+
             if (status == DBHelper.STATUS_SUCCESS || status == DBHelper.STATUS_CANCELLED) {
                 holder.layoutButtons.setVisibility(View.GONE);
             } else {
                 holder.layoutButtons.setVisibility(View.VISIBLE);
-                // Tùy biến chữ trên nút dựa theo trạng thái hiện tại
-                if (status == DBHelper.STATUS_PENDING) {
-                    holder.btnNext.setText("Xác nhận đơn");
-                } else if (status == DBHelper.STATUS_CONFIRMED) {
-                    holder.btnNext.setText("Giao hàng");
-                } else if (status == DBHelper.STATUS_SHIPPING) {
-                    holder.btnNext.setText("Hoàn thành");
-                }
+                if (status == DBHelper.STATUS_PENDING) holder.btnNext.setText("Xác nhận đơn");
+                else if (status == DBHelper.STATUS_CONFIRMED) holder.btnNext.setText("Giao hàng");
+                else if (status == DBHelper.STATUS_SHIPPING) holder.btnNext.setText("Hoàn thành");
             }
 
             holder.btnNext.setOnClickListener(v -> listener.onUpdateStatus(id, status));

@@ -22,34 +22,37 @@ public class OrderDAO {
     }
 
     // HÀM QUAN TRỌNG: Thực hiện đặt hàng
-    public boolean placeOrder(int userId, int totalPrice, String address, String name, String phone, List<CartItem> items) {
+    // CẬP NHẬT: Thêm tham số paymentMethod
+    public boolean placeOrder(int userId, int totalPrice, String address, String name, String phone, int paymentMethod, List<CartItem> items) {
         database.beginTransaction();
         try {
             ContentValues orderValues = new ContentValues();
             orderValues.put(DBHelper.COL_ORDER_USER_ID, userId);
             orderValues.put(DBHelper.COL_ORDER_TOTAL, totalPrice);
-            orderValues.put(DBHelper.COL_ORDER_STATUS, DBHelper.STATUS_PENDING);
+
+            // Nếu trả MoMo (1) thì trạng thái là Đã xác nhận (1), Tiền mặt (0) là Chờ xác nhận (0)
+            int status = (paymentMethod == 1) ? 1 : 0;
+            orderValues.put(DBHelper.COL_ORDER_STATUS, status);
+
             orderValues.put(DBHelper.COL_ORDER_ADDRESS, address);
-            orderValues.put(DBHelper.COL_ORDER_RECEIVER_NAME, name); // Lưu tên người nhận
-            orderValues.put(DBHelper.COL_ORDER_RECEIVER_PHONE, phone); // Lưu số điện thoại
+            orderValues.put(DBHelper.COL_ORDER_RECEIVER_NAME, name);
+            orderValues.put(DBHelper.COL_ORDER_RECEIVER_PHONE, phone);
+            orderValues.put(DBHelper.COL_ORDER_PAYMENT_METHOD, paymentMethod); // Lưu phương thức thanh toán
 
             long orderId = database.insert(DBHelper.TABLE_ORDER, null, orderValues);
             if (orderId == -1) return false;
 
-            // 2. Duyệt danh sách món trong giỏ để chép sang OrderItem
+            // Lưu chi tiết sản phẩm
             for (CartItem item : items) {
                 ContentValues detailValues = new ContentValues();
                 detailValues.put(DBHelper.COL_OI_ORDER_ID, (int) orderId);
                 detailValues.put(DBHelper.COL_OI_SIZE_ID, item.getFruitSizeId());
                 detailValues.put(DBHelper.COL_OI_QUANTITY, item.getQuantity());
-                detailValues.put(DBHelper.COL_OI_PRICE, item.getPrice()); // Lưu giá tại thời điểm mua
-
-                long detailId = database.insert(DBHelper.TABLE_ORDER_ITEM, null, detailValues);
-                if (detailId == -1) throw new Exception("Lỗi chèn chi tiết đơn hàng");
+                detailValues.put(DBHelper.COL_OI_PRICE, item.getPrice());
+                database.insert(DBHelper.TABLE_ORDER_ITEM, null, detailValues);
             }
 
-            // 3. Xóa sạch giỏ hàng của User này sau khi đặt thành công
-            // Tìm cart_id của user
+            // Xóa giỏ hàng sau khi đặt thành công
             String getCartIdSql = "SELECT id FROM Cart WHERE user_id = ?";
             Cursor cursor = database.rawQuery(getCartIdSql, new String[]{String.valueOf(userId)});
             if (cursor.moveToFirst()) {
@@ -58,7 +61,6 @@ public class OrderDAO {
             }
             cursor.close();
 
-            // Đánh dấu giao dịch thành công
             database.setTransactionSuccessful();
             return true;
         } catch (Exception e) {
@@ -82,9 +84,10 @@ public class OrderDAO {
                 order.setStatus(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_STATUS)));
                 order.setAddress(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_ADDRESS)));
                 order.setCreatedAt(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_DATE)));
-                // Đọc 2 trường mới
                 order.setReceiverName(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_RECEIVER_NAME)));
                 order.setReceiverPhone(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_RECEIVER_PHONE)));
+                // ĐỌC CỘT PHƯƠNG THỨC THANH TOÁN
+                order.setPaymentMethod(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_ORDER_PAYMENT_METHOD)));
                 list.add(order);
             } while (cursor.moveToNext());
         }
@@ -127,7 +130,7 @@ public class OrderDAO {
 
     // Lấy toàn bộ đơn hàng (kèm tên User qua JOIN)
     public Cursor getAllOrdersWithUserInfo() {
-        // Thay JOIN bằng LEFT JOIN
+        // Query lấy thêm cả payment_method
         String query = "SELECT o.*, u." + DBHelper.COL_USER_FULLNAME +
                 " FROM " + DBHelper.TABLE_ORDER + " o " +
                 " LEFT JOIN " + DBHelper.TABLE_USER + " u ON o." + DBHelper.COL_ORDER_USER_ID + " = u." + DBHelper.COL_USER_ID +
