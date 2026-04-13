@@ -27,6 +27,7 @@ import com.example.ungdungbantraicay.DAO.UserDAO;
 import com.example.ungdungbantraicay.Helper.VNPayHelper;
 import com.example.ungdungbantraicay.Model.CartItem;
 import com.example.ungdungbantraicay.R;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.List;
 
@@ -49,10 +50,13 @@ public class CartFragment extends Fragment {
         Button btnGoHome = view.findViewById(R.id.btnGoHome);
 
         btnGoHome.setOnClickListener(v -> {
-            requireActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.frame_container, new HomeFragment())
-                    .commit();
+            // Tìm BottomNavigationView bằng đúng ID trong activity_home.xml
+            BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottom_nav);
+
+            if (bottomNav != null) {
+                // Gọi ID đúng từ file menu: menu_home
+                bottomNav.setSelectedItemId(R.id.menu_home);
+            }
         });
 
         recyclerCart = view.findViewById(R.id.recyclerCart);
@@ -260,8 +264,15 @@ private void handleCheckout() {
         tmpPhone = edtPhone.getText().toString().trim();
         tmpAddress = edtAddress.getText().toString().trim();
 
+        // 1. Kiểm tra trống
         if (tmpName.isEmpty() || tmpPhone.isEmpty() || tmpAddress.isEmpty()) {
-            Toast.makeText(getContext(), "Vui lòng nhập đủ thông tin!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Vui lòng nhập đầy đủ thông tin!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 2. Kiểm tra độ dài số điện thoại (VD: từ 10-11 số)
+        if (tmpPhone.length() < 10 || tmpPhone.length() > 11) {
+            edtPhone.setError("Số điện thoại phải có 10-11 chữ số!");
             return;
         }
 

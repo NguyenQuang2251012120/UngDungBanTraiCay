@@ -85,7 +85,7 @@ public class HomeFragment extends Fragment {
 
         // Cập nhật Trái cây (Load lại từ DB để lấy giá mới nhất, ảnh mới...)
         fruitList.clear();
-        fruitList.addAll(fruitDAO.getAllFruits());
+        fruitList.addAll(fruitDAO.getAllFruitsForUser());
         fruitAdapter.notifyDataSetChanged();
     }
 }

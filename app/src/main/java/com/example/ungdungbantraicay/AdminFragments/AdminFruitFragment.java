@@ -91,7 +91,7 @@ public class AdminFruitFragment extends Fragment {
     }
 
     private void showDialogFruit(Fruit fruit) {
-        selectedImageUri = null; // Reset đường dẫn mỗi lần mở dialog
+        selectedImageUri = null;
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         View view = getLayoutInflater().inflate(R.layout.dialog_add_fruit, null);
 
@@ -130,24 +130,41 @@ public class AdminFruitFragment extends Fragment {
         });
 
         builder.setView(view);
-        builder.setPositiveButton(isEdit ? "Cập nhật" : "Thêm mới", (dialog, which) -> {
+        builder.setPositiveButton(fruit != null ? "Cập nhật" : "Thêm mới", null); // Để null để xử lý riêng
+        builder.setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // Xử lý sự kiện nút POSITIVE (Lưu/Cập nhật)
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             String name = edtName.getText().toString().trim();
             String desc = edtDesc.getText().toString().trim();
             int catId = catList.get(spnCat.getSelectedItemPosition()).getId();
             int status = chkStatus.isChecked() ? 1 : 0;
+            int currentId = (fruit == null) ? -1 : fruit.getId();
 
+            // 1. Kiểm tra trống
             if (name.isEmpty()) {
-                Toast.makeText(getContext(), "Vui lòng nhập tên!", Toast.LENGTH_SHORT).show();
+                edtName.setError("Tên không được để trống!");
                 return;
             }
 
-            // Xử lý lưu ảnh
-            String finalImagePath = isEdit ? fruit.getImage() : "apple"; // Mặc định nếu không chọn
+            // 2. KIỂM TRA TRÙNG TÊN
+            if (fruitDAO.isFruitNameExists(name, currentId)) {
+                edtName.setError("Tên trái cây này đã tồn tại!");
+                Toast.makeText(getContext(), "Vui lòng chọn tên khác!", Toast.LENGTH_SHORT).show();
+                return; // Dừng lại, không cho lưu
+            }
+
+            // 3. Xử lý lưu ảnh (giữ nguyên logic của bạn)
+            String finalImagePath = (fruit != null) ? fruit.getImage() : "apple";
             if (selectedImageUri != null) {
                 finalImagePath = saveImageToInternal(selectedImageUri);
             }
 
-            if (isEdit) {
+            if (fruit != null) {
+                // Update
                 fruit.setName(name);
                 fruit.setDescription(desc);
                 fruit.setImage(finalImagePath);
@@ -155,14 +172,14 @@ public class AdminFruitFragment extends Fragment {
                 fruit.setStatus(status);
                 fruitDAO.updateFruitFull(fruit);
             } else {
+                // Insert
                 Fruit newFruit = new Fruit(0, name, desc, finalImagePath, catId, status, 0.0f);
                 fruitDAO.insertFruit(newFruit);
             }
-            loadData();
-        });
 
-        builder.setNegativeButton("Hủy", null);
-        builder.create().show();
+            loadData();
+            dialog.dismiss(); // Chỉ đóng khi mọi thứ đã OK
+        });
     }
 
     // Hàm lưu Uri ảnh vào thư mục files của App
@@ -197,13 +214,24 @@ public class AdminFruitFragment extends Fragment {
 
     private void confirmDelete(Fruit fruit) {
         new AlertDialog.Builder(getContext())
-                .setTitle("Xác nhận")
-                .setMessage("Xóa " + fruit.getName() + "?")
+                .setTitle("Xác nhận xóa")
+                .setMessage("Bạn có chắc chắn muốn xóa " + fruit.getName() + " không?")
                 .setPositiveButton("Xóa", (d, w) -> {
-                    if (fruitDAO.deleteFruit(fruit.getId())) {
-                        loadData();
+                    int result = fruitDAO.deleteFruitSmart(fruit.getId());
+
+                    if (result == 1) {
+                        Toast.makeText(getContext(),
+                                "Sản phẩm đã có đơn hàng nên hệ thống đã CHUYỂN VÀO TRẠNG THÁI NGỪNG BÁN để giữ lịch sử.",
+                                Toast.LENGTH_LONG).show();
+                    } else if (result == 2) {
+                        Toast.makeText(getContext(), "Đã XÓA VĨNH VIỄN sản phẩm khỏi hệ thống.",
+                                Toast.LENGTH_SHORT).show();
                     }
-                }).setNegativeButton("Hủy", null).show();
+
+                    loadData(); // Load lại danh sách
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 
     private List<String> getCategoryNames(List<Category> list) {

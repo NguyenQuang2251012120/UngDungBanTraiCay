@@ -116,14 +116,27 @@ public class HomeActivity extends AppCompatActivity {
         boolean success = orderDAO.placeOrder(userId, total, address, name, phone, 1, items);
 
         if (success) {
-            Toast.makeText(this, "Thanh toán thành công! Đơn hàng đã được tạo.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Thanh toán thành công!", Toast.LENGTH_LONG).show();
             getSharedPreferences("TEMP_ORDER", MODE_PRIVATE).edit().clear().apply();
+
+            // CHỈ CẦN DÒNG NÀY: Nó sẽ tự bôi xanh icon Hóa đơn và tự load OrderFragment
             bottomNav.setSelectedItemId(R.id.menu_order);
-            loadFragment(new OrderFragment());
+
         } else {
-            Toast.makeText(this, "Lỗi khi lưu đơn hàng vào Database!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Lỗi khi lưu đơn hàng!", Toast.LENGTH_SHORT).show();
         }
     }
+//        boolean success = orderDAO.placeOrder(userId, total, address, name, phone, 1, items);
+//
+//        if (success) {
+//            Toast.makeText(this, "Thanh toán thành công! Đơn hàng đã được tạo.", Toast.LENGTH_LONG).show();
+//            getSharedPreferences("TEMP_ORDER", MODE_PRIVATE).edit().clear().apply();
+//            bottomNav.setSelectedItemId(R.id.menu_order);
+//            loadFragment(new OrderFragment());
+//        } else {
+//            Toast.makeText(this, "Lỗi khi lưu đơn hàng vào Database!", Toast.LENGTH_SHORT).show();
+//        }
+//    }
 
     private void loadFragment(Fragment fragment){
         getSupportFragmentManager()

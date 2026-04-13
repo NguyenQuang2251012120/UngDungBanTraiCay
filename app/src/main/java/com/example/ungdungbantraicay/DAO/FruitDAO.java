@@ -37,6 +37,26 @@ public class FruitDAO {
         return list;
     }
 
+    public List<Fruit> getAllFruitsForUser() {
+        List<Fruit> list = new ArrayList<>();
+        // JOIN với bảng Category để kiểm tra status của danh mục
+        String query = "SELECT f.*, " +
+                "(SELECT AVG(rating) FROM Review WHERE fruit_id = f.id) as avg_rating, " +
+                "(SELECT MIN(price) FROM FruitSize WHERE fruit_id = f.id AND status = 1) as min_price " +
+                "FROM " + DBHelper.TABLE_FRUIT + " f " +
+                "JOIN Category c ON f.category_id = c.id " +
+                "WHERE c.status = 1 AND f.status = 1"; // Ràng buộc kép
+
+        Cursor cursor = database.rawQuery(query, null);
+        if (cursor.moveToFirst()) {
+            do {
+                list.add(cursorToFruit(cursor));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return list;
+    }
+
     // --- 2. Lấy trái cây theo Category ---
     public List<Fruit> getFruitsByCategory(int categoryId) {
         List<Fruit> list = new ArrayList<>();
@@ -141,8 +161,29 @@ public class FruitDAO {
         return database.insert(DBHelper.TABLE_FRUIT, null, values);
     }
 
-    public boolean deleteFruit(int id) {
-        return database.delete(DBHelper.TABLE_FRUIT, DBHelper.COL_FRUIT_ID + " = ?", new String[]{String.valueOf(id)}) > 0;
+    public int deleteFruitSmart(int id) {
+        // 1. Kiểm tra xem sản phẩm có nằm trong chi tiết đơn hàng (OrderDetail) nào không
+        // Lưu ý: Tên bảng và cột phải khớp với DBHelper của bạn (thường là OrderDetail và fruit_id)
+        Cursor cursor = database.rawQuery("SELECT COUNT(*) FROM OrderDetail WHERE fruit_id = ?",
+                new String[]{String.valueOf(id)});
+
+        int count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+        cursor.close();
+
+        if (count > 0) {
+            // TRƯỜNG HỢP 1: Đã có lịch sử mua hàng -> XÓA MỀM
+            ContentValues values = new ContentValues();
+            values.put(DBHelper.COL_FRUIT_STATUS, 0); // Chuyển trạng thái về ngừng kinh doanh
+            database.update(DBHelper.TABLE_FRUIT, values, "id = ?", new String[]{String.valueOf(id)});
+            return 1; // Trả về mã 1 để báo hiệu là đã ẩn sản phẩm
+        } else {
+            // TRƯỜNG HỢP 2: Sản phẩm mới, chưa ai mua -> XÓA CỨNG
+            database.delete(DBHelper.TABLE_FRUIT, "id = ?", new String[]{String.valueOf(id)});
+            return 2; // Trả về mã 2 để báo hiệu đã xóa vĩnh viễn
+        }
     }
 
     public boolean updateFruitFull(Fruit f) {
@@ -154,6 +195,18 @@ public class FruitDAO {
         values.put(DBHelper.COL_FRUIT_STATUS, f.getStatus());
         return database.update(DBHelper.TABLE_FRUIT, values, DBHelper.COL_FRUIT_ID + " = ?", new String[]{String.valueOf(f.getId())}) > 0;
     }
+
+    // Kiểm tra trùng tên trái cây
+    public boolean isFruitNameExists(String name, int id) {
+        // id != ? giúp khi SỬA, nó không tự check trùng với chính nó
+        String query = "SELECT * FROM " + DBHelper.TABLE_FRUIT +
+                " WHERE " + DBHelper.COL_FRUIT_NAME + " = ? AND " + DBHelper.COL_FRUIT_ID + " != ?";
+        Cursor cursor = database.rawQuery(query, new String[]{name.trim(), String.valueOf(id)});
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        return exists;
+    }
+
 
 
 }

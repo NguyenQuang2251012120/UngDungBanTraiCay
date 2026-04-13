@@ -49,7 +49,7 @@ public class ProductFragment extends Fragment {
         setupCategoryChips();
 
         // 2. Khởi tạo danh sách ban đầu
-        fruitList = fruitDAO.getAllFruits();
+        fruitList = fruitDAO.getAllFruitsForUser();
         fruitAdapter = new FruitAdapter(getContext(), (ArrayList<Fruit>) fruitList, fruit -> {
             // Chuyển sang màn hình chi tiết khi click vào item
             Intent intent = new Intent(getActivity(), FruitDetailActivity.class);

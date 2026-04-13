@@ -67,7 +67,7 @@ public class AdminCategoryFragment extends Fragment {
     private void showConfirmDeleteDialog(Category category) {
         new AlertDialog.Builder(getContext())
                 .setTitle("Xác nhận xóa")
-                .setMessage("Bạn có chắc chắn muốn xóa danh mục '" + category.getName() + "'?\nLưu ý: Không thể xóa nếu đã có trái cây thuộc danh mục này.")
+                .setMessage("Bạn có chắc chắn muốn xóa danh mục '" + category.getName())
                 .setIcon(android.R.drawable.ic_delete)
                 .setPositiveButton("Xóa", (dialog, which) -> {
                     if (dao.deleteCategory(category.getId())) {
@@ -88,27 +88,55 @@ public class AdminCategoryFragment extends Fragment {
         CheckBox cbStatus = dialogView.findViewById(R.id.cbStatus);
 
         if (category != null) {
-            builder.setTitle("Sửa danh mục");
+            builder.setTitle("Sửa danh mục: " + category.getName());
             edtName.setText(category.getName());
             cbStatus.setChecked(category.getStatus() == 1);
+            cbStatus.setVisibility(View.VISIBLE);
         } else {
-            builder.setTitle("Thêm danh mục");
-            cbStatus.setVisibility(View.GONE); // Thêm mới thì mặc định hiện
+            builder.setTitle("Thêm danh mục mới");
+            cbStatus.setVisibility(View.GONE);
         }
 
         builder.setView(dialogView);
-        builder.setPositiveButton("Lưu", (dialog, which) -> {
-            String name = edtName.getText().toString();
+        builder.setPositiveButton("Lưu", null); // Đặt null để xử lý riêng sự kiện click
+        builder.setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // Xử lý sự kiện nút LƯU (Ngăn đóng dialog nếu có lỗi)
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String name = edtName.getText().toString().trim();
+            int currentId = (category == null) ? -1 : category.getId();
+
+            // LỖI 1: Tên để trống
+            if (name.isEmpty()) {
+                edtName.setError("Tên danh mục không được để trống!");
+                return;
+            }
+
+            // LỖI 2: Trùng tên danh mục
+            if (dao.isCategoryNameExists(name, currentId)) {
+                edtName.setError("Tên danh mục này đã tồn tại!");
+                Toast.makeText(getContext(), "Không được đặt tên trùng!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Nếu hợp lệ thì mới thực hiện lưu
             if (category == null) {
-                dao.insertCategory(name);
+                if (dao.insertCategory(name)) {
+                    Toast.makeText(getContext(), "Thêm thành công", Toast.LENGTH_SHORT).show();
+                }
             } else {
                 category.setName(name);
                 category.setStatus(cbStatus.isChecked() ? 1 : 0);
-                dao.updateCategory(category);
+                if (dao.updateCategory(category)) {
+                    Toast.makeText(getContext(), "Cập nhật thành công", Toast.LENGTH_SHORT).show();
+                }
             }
+
             loadData();
+            dialog.dismiss(); // Chỉ đóng dialog khi dữ liệu hợp lệ và đã lưu
         });
-        builder.setNegativeButton("Hủy", null);
-        builder.show();
     }
 }

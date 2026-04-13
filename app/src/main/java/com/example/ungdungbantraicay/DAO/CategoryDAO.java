@@ -89,13 +89,34 @@ public class CategoryDAO {
                 DBHelper.COL_CAT_ID + "=?", new String[]{String.valueOf(category.getId())}) > 0;
     }
 
+    // 2. Chặn xóa tuyệt đối nếu còn sản phẩm (Kiểm tra thủ công cho chắc)
     public boolean deleteCategory(int id) {
-        try {
-            return database.delete(DBHelper.TABLE_CATEGORY,
-                    DBHelper.COL_CAT_ID + "=?", new String[]{String.valueOf(id)}) > 0;
-        } catch (Exception e) {
-            // Trả về false nếu vướng ràng buộc khóa ngoại (đang có Trái cây thuộc danh mục này)
+        // Check xem có trái cây nào đang "ở nhờ" trong danh mục này không
+        Cursor cursor = database.rawQuery("SELECT count(*) FROM " + DBHelper.TABLE_FRUIT +
+                        " WHERE " + DBHelper.COL_FRUIT_CAT_ID + " = ?",
+                new String[]{String.valueOf(id)});
+        cursor.moveToFirst();
+        int productCount = cursor.getInt(0);
+        cursor.close();
+
+        if (productCount > 0) {
+            // Có sản phẩm -> Cấm xóa, trả về false để Fragment hiện Toast
             return false;
         }
+
+        // Nếu không có sản phẩm mới thực hiện lệnh xóa
+        return database.delete(DBHelper.TABLE_CATEGORY,
+                DBHelper.COL_CAT_ID + "=?", new String[]{String.valueOf(id)}) > 0;
+    }
+
+    // 1. Chống trùng tên (Dùng khi Thêm và Sửa)
+    public boolean isCategoryNameExists(String name, int id) {
+        // id != ? để khi SỬA nó không tự check trùng với chính nó
+        String query = "SELECT * FROM " + DBHelper.TABLE_CATEGORY +
+                " WHERE " + DBHelper.COL_CAT_NAME + " = ? AND " + DBHelper.COL_CAT_ID + " != ?";
+        Cursor cursor = database.rawQuery(query, new String[]{name.trim(), String.valueOf(id)});
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        return exists;
     }
 }

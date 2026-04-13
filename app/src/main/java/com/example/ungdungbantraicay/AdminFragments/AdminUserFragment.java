@@ -74,49 +74,113 @@ public class AdminUserFragment extends Fragment {
         String[] roles = {"user", "admin"};
         spnRole.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, roles));
 
+        // Lấy ID Admin đang đăng nhập từ SharedPreferences
+        SharedPreferences pref = getActivity().getSharedPreferences("USER_FILE", Context.MODE_PRIVATE);
+        int currentAdminId = pref.getInt("userId", -1);
+
         if (user != null) {
-            builder.setTitle("Sửa thông tin");
+            builder.setTitle("Sửa thông tin: " + user.getUsername());
             edtUser.setText(user.getUsername());
-            edtUser.setEnabled(false); // Không cho sửa username
-
-            // --- THAY ĐỔI Ở ĐÂY ---
-            edtPass.setVisibility(View.VISIBLE); // Cho hiện ô pass để sửa
-            edtPass.setText(user.getPassword()); // Điền pass cũ vào ô nhập
-            // ----------------------
-
+            edtUser.setEnabled(false);
+            edtPass.setText(user.getPassword());
             edtFull.setText(user.getFullname());
             edtEmail.setText(user.getEmail());
             spnRole.setSelection(user.getRole().equals("admin") ? 1 : 0);
             chkLocked.setChecked(user.getStatus() == 0);
+
+            // BẢO VỆ ADMIN GỐC: Nếu là Admin ID 1 thì không cho đổi Role hoặc Khóa
+            if (user.getId() == 1) {
+                spnRole.setEnabled(false);
+                chkLocked.setEnabled(false);
+            }
         } else {
-            builder.setTitle("Thêm tài khoản");
+            builder.setTitle("Thêm tài khoản mới");
             chkLocked.setVisibility(View.GONE);
         }
 
-        builder.setPositiveButton("Lưu", (d, w) -> {
+        builder.setPositiveButton("Lưu", null); // Để null để ta tự xử lý click bên dưới
+        builder.setNegativeButton("Hủy", (d, w) -> d.dismiss());
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // Xử lý sự kiện click nút Lưu mà không làm đóng Dialog nếu có lỗi
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
+            String uName = edtUser.getText().toString().trim();
+            String uPass = edtPass.getText().toString().trim();
+            String uFull = edtFull.getText().toString().trim();
+            String uEmail = edtEmail.getText().toString().trim();
+
+            // 1. CHECK LỖI TRỐNG (Null/Empty)
+            if (uName.isEmpty() || uPass.isEmpty() || uFull.isEmpty() || uEmail.isEmpty()) {
+                Toast.makeText(getContext(), "Vui lòng nhập đầy đủ thông tin!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // 2. CHECK ĐỘ DÀI MẬT KHẨU (Nếu muốn)
+            if (uPass.length() < 6) {
+                edtPass.setError("Mật khẩu phải ít nhất 6 ký tự");
+                return;
+            }
+
+            // Thực hiện lưu dữ liệu
             User u = (user == null) ? new User() : user;
-            u.setUsername(edtUser.getText().toString());
-            u.setPassword(edtPass.getText().toString());
-            u.setFullname(edtFull.getText().toString());
-            u.setEmail(edtEmail.getText().toString());
+            u.setUsername(uName);
+            u.setPassword(uPass);
+            u.setFullname(uFull);
+            u.setEmail(uEmail);
             u.setRole(spnRole.getSelectedItem().toString());
             u.setStatus(chkLocked.isChecked() ? 0 : 1);
 
-            if (user == null) userDAO.insertUserAdmin(u);
-            else userDAO.updateUserAdmin(u);
+            boolean success;
+            if (user == null) success = userDAO.insertUserAdmin(u);
+            else success = userDAO.updateUserAdmin(u);
 
-            loadData();
+            if (success) {
+                Toast.makeText(getContext(), "Thao tác thành công!", Toast.LENGTH_SHORT).show();
+                loadData();
+                dialog.dismiss(); // Chỉ đóng dialog khi thành công
+            } else {
+                Toast.makeText(getContext(), "Thao tác thất bại (Có thể trùng Username)!", Toast.LENGTH_SHORT).show();
+            }
         });
-        builder.show();
     }
-
     private void confirmDelete(User user) {
+        // Lấy ID Admin hiện tại
+        SharedPreferences pref = getActivity().getSharedPreferences("USER_FILE", Context.MODE_PRIVATE);
+        int currentAdminId = pref.getInt("userId", -1);
+
+        // 1. Chặn tự xóa chính mình
+        if (user.getId() == currentAdminId) {
+            Toast.makeText(getContext(), "Bạn không thể tự xóa chính mình!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 2. Chặn xóa Admin khác (Chỉ Admin gốc ID 1 mới được quyền tối cao, hoặc chặn tất cả Admin xóa nhau)
+        if (user.getRole().equals("admin")) {
+            Toast.makeText(getContext(), "Không thể xóa tài khoản Quản trị viên khác!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 3. Chặn xóa tài khoản đang hoạt động (Status = 1)
+        if (user.getStatus() == 1) {
+            Toast.makeText(getContext(), "Tài khoản đang hoạt động! Hãy khóa (Status = 0) trước khi xóa.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // 4. Nếu vượt qua các bước trên -> Hiện Dialog xác nhận (Có nút Hủy)
         new AlertDialog.Builder(getContext())
-                .setTitle("Xóa tài khoản")
-                .setMessage("Bạn có chắc muốn xóa " + user.getUsername() + "?")
+                .setTitle("Xác nhận xóa vĩnh viễn")
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setMessage("Bạn có chắc muốn xóa " + user.getUsername() + "? Hành động này không thể hoàn tác.")
                 .setPositiveButton("Xóa", (d, w) -> {
-                    if (userDAO.deleteUser(user.getId())) loadData();
-                    else Toast.makeText(getContext(), "User này đã có đơn hàng, không thể xóa!", Toast.LENGTH_LONG).show();
-                }).show();
-    }
-}
+                    if (userDAO.deleteUser(user.getId())) {
+                        Toast.makeText(getContext(), "Đã xóa user thành công!", Toast.LENGTH_SHORT).show();
+                        loadData();
+                    } else {
+                        Toast.makeText(getContext(), "Lỗi: User này đã có dữ liệu đơn hàng, không thể xóa!", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .setNegativeButton("Hủy bỏ", (d, w) -> d.dismiss()) // NÚT HỦY
+                .show();
+    }}

@@ -46,10 +46,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Giao đến: 123 Đường ABC, Quận 1"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:text="Người nhận: Nguyễn Văn A"
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/tvOrderAddress"
@@ -67,15 +65,32 @@
             android:background="#EEEEEE"
             android:layout_marginVertical="8dp" />
 
-        <TextView
-            android:id="@+id/tvOrderTotal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:text="Tổng tiền: 250,000 VND"
-            android:textColor="#FF5722"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tvOrderTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:text="Tổng tiền: 250,000 VND"
+                android:textColor="#FF5722"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <android.widget.Button
+                android:id="@+id/btnCancelOrder"
+                android:layout_width="wrap_content"
+                android:layout_height="35dp"
+                android:layout_alignParentEnd="true"
+                android:background="@android:color/transparent"
+                android:text="Hủy đơn"
+                android:textColor="#F44336"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:paddingHorizontal="12dp"
+                android:visibility="gone" /> </RelativeLayout>
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

@@ -6,6 +6,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+
 import com.example.ungdungbantraicay.Helper.DBHelper;
 import com.example.ungdungbantraicay.Model.User;
 
@@ -132,27 +134,24 @@ public class UserDAO {
         return user;
     }
 
-    public int getUserIdByUsername(String username) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT id FROM User WHERE username = ?", new String[]{username});
-        int id = -1;
-        if (cursor.moveToFirst()) {
-            id = cursor.getInt(0);
-        }
-        cursor.close();
-        return id;
-    }
+//    public int getUserIdByUsername(String username) {
+//        SQLiteDatabase db = dbHelper.getReadableDatabase();
+//        Cursor cursor = db.rawQuery("SELECT id FROM User WHERE username = ?", new String[]{username});
+//        int id = -1;
+//        if (cursor.moveToFirst()) {
+//            id = cursor.getInt(0);
+//        }
+//        cursor.close();
+//        return id;
+//    }
 
     public String getAddressByUserId(int userId) {
         String address = "";
         Cursor cursor = database.rawQuery("SELECT address FROM User WHERE id = ?", new String[]{String.valueOf(userId)});
-        if (cursor.moveToFirst()) {
-            address = cursor.getString(0);
-        }
+        if (cursor.moveToFirst()) address = cursor.getString(0);
         cursor.close();
         return address;
     }
-
     // 1. Lấy tất cả người dùng trừ chính mình (để không tự xóa mình)
     public List<User> getAllUsersForAdmin(String currentAdminUsername) {
         List<User> list = new ArrayList<>();
@@ -160,51 +159,91 @@ public class UserDAO {
         Cursor cursor = database.rawQuery(query, new String[]{currentAdminUsername});
         if (cursor.moveToFirst()) {
             do {
-                list.add(new User(
-                        cursor.getInt(0), cursor.getString(1), cursor.getString(2),
-                        cursor.getString(3), cursor.getString(4), cursor.getString(5),
-                        cursor.getString(6), cursor.getString(7), cursor.getInt(8)
-                ));
+                list.add(cursorToUser(cursor));
             } while (cursor.moveToNext());
         }
         cursor.close();
         return list;
     }
-
     // 2. Thêm mới (Admin tạo hộ)
     public boolean insertUserAdmin(User user) {
+        // RÀO CHẮN 1: Ngăn chặn dữ liệu rỗng/null
+        if (user.getUsername() == null || user.getUsername().trim().isEmpty() ||
+                user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+            return false;
+        }
+
+        // RÀO CHẮN 2: Kiểm tra trùng Username
+        if (checkUsernameExists(user.getUsername())) return false;
+
         ContentValues values = new ContentValues();
-        values.put(DBHelper.COL_USER_NAME, user.getUsername());
-        values.put(DBHelper.COL_USER_PASS, user.getPassword());
+        values.put(DBHelper.COL_USER_NAME, user.getUsername().trim());
+        values.put(DBHelper.COL_USER_PASS, user.getPassword().trim());
         values.put(DBHelper.COL_USER_FULLNAME, user.getFullname());
         values.put(DBHelper.COL_USER_EMAIL, user.getEmail());
         values.put(DBHelper.COL_USER_PHONE, user.getPhone());
         values.put(DBHelper.COL_USER_ADDRESS, user.getAddress());
-        values.put(DBHelper.COL_USER_ROLE, user.getRole()); // Quan trọng: Có role
-        values.put(DBHelper.COL_USER_STATUS, 1);
+        values.put(DBHelper.COL_USER_ROLE, user.getRole());
+        values.put(DBHelper.COL_USER_STATUS, 1); // Mặc định tạo mới là Active
+
         return database.insert(DBHelper.TABLE_USER, null, values) > 0;
     }
-
     // 3. Cập nhật thông tin (Sửa, Đổi role, Khóa/Mở)
     public boolean updateUserAdmin(User user) {
+        // RÀO CHẮN 3: Bảo vệ Admin tối cao (ID = 1)
+        // Không cho phép đổi Role của Admin gốc thành 'user' hoặc Status thành 0 (khóa)
+        if (user.getId() == 1) {
+            user.setRole("admin");
+            user.setStatus(1);
+        }
+
         ContentValues v = new ContentValues();
-        v.put(DBHelper.COL_USER_PASS, user.getPassword()); // THÊM DÒNG NÀY
+        v.put(DBHelper.COL_USER_PASS, user.getPassword());
         v.put(DBHelper.COL_USER_FULLNAME, user.getFullname());
         v.put(DBHelper.COL_USER_EMAIL, user.getEmail());
         v.put(DBHelper.COL_USER_PHONE, user.getPhone());
         v.put(DBHelper.COL_USER_ADDRESS, user.getAddress());
         v.put(DBHelper.COL_USER_ROLE, user.getRole());
         v.put(DBHelper.COL_USER_STATUS, user.getStatus());
+
         return database.update(DBHelper.TABLE_USER, v, "id=?", new String[]{String.valueOf(user.getId())}) > 0;
     }
-
     // 4. Xóa tài khoản
     public boolean deleteUser(int id) {
-        try {
-            return database.delete(DBHelper.TABLE_USER, "id=?", new String[]{String.valueOf(id)}) > 0;
-        } catch (Exception e) { return false; }
-    }
+        // RÀO CHẮN 4: Không bao giờ được xóa Admin gốc
+        if (id == 1) return false;
 
+        try {
+            // RÀO CHẮN 5: Kiểm tra trạng thái và vai trò trước khi xóa
+            String query = "SELECT " + DBHelper.COL_USER_ROLE + ", " + DBHelper.COL_USER_STATUS +
+                    " FROM " + TABLE_USER + " WHERE id = ?";
+            Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(id)});
+
+            if (cursor.moveToFirst()) {
+                String role = cursor.getString(0);
+                int status = cursor.getInt(1);
+
+                // Nếu là admin khác -> Không cho xóa (để tránh admin này xóa admin kia)
+                if ("admin".equals(role)) {
+                    cursor.close();
+                    return false;
+                }
+
+                // Nếu tài khoản đang hoạt động (status = 1) -> Không cho xóa
+                if (status == 1) {
+                    cursor.close();
+                    return false;
+                }
+            }
+            cursor.close();
+
+            // Thực hiện xóa nếu thỏa mãn: là 'user' VÀ status = 0 (đã bị khóa)
+            return database.delete(DBHelper.TABLE_USER, "id=?", new String[]{String.valueOf(id)}) > 0;
+        } catch (Exception e) {
+            Log.e("UserDAO", "Error deleting user: " + e.getMessage());
+            return false;
+        }
+    }
     // 1. Kiểm tra xem username mới đã tồn tại chưa
     public boolean checkUsernameExists(String username) {
         Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_USER +
@@ -213,7 +252,6 @@ public class UserDAO {
         cursor.close();
         return exists;
     }
-
     // 2. Cập nhật thông tin (Dùng ID để làm điều kiện WHERE cho an toàn)
     public boolean updateUserWithId(User user) {
         ContentValues values = new ContentValues();
@@ -227,4 +265,20 @@ public class UserDAO {
                 new String[]{String.valueOf(user.getId())});
         return rows > 0;
     }
+
+    private User cursorToUser(Cursor cursor) {
+        return new User(
+                cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_ID)),
+                cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_NAME)),
+                cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_PASS)),
+                cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_FULLNAME)),
+                cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_EMAIL)),
+                cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_PHONE)),
+                cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_ADDRESS)),
+                cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_ROLE)),
+                cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_STATUS))
+        );
+    }
+
+
 }

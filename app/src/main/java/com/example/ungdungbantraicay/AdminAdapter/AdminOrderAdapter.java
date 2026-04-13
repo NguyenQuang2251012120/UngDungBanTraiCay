@@ -57,7 +57,7 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Vi
             String pMethod = (method == 1) ? " (VNPay - Đã trả)" : " (Tiền mặt)";
             holder.tvStatus.setText("Trạng thái: " + DBHelper.getStatusName(status) + pMethod);
 
-            // Đổi màu Text nếu là MoMo để Admin dễ thấy
+            // Đổi màu Text nếu là VNPay để Admin dễ thấy
             if (method == 1) holder.tvStatus.setTextColor(android.graphics.Color.parseColor("#005BA1")); // Màu tím MoMo
             else holder.tvStatus.setTextColor(android.graphics.Color.BLACK);
 
@@ -65,9 +65,19 @@ public class AdminOrderAdapter extends RecyclerView.Adapter<AdminOrderAdapter.Vi
                 holder.layoutButtons.setVisibility(View.GONE);
             } else {
                 holder.layoutButtons.setVisibility(View.VISIBLE);
-                if (status == DBHelper.STATUS_PENDING) holder.btnNext.setText("Xác nhận đơn");
-                else if (status == DBHelper.STATUS_CONFIRMED) holder.btnNext.setText("Giao hàng");
-                else if (status == DBHelper.STATUS_SHIPPING) holder.btnNext.setText("Hoàn thành");
+                if (status == DBHelper.STATUS_PENDING) {
+                    holder.btnCancel.setVisibility(View.VISIBLE); // HIỆN nút Hủy
+                    holder.btnNext.setText("Xác nhận đơn");
+                } else {
+                    // Các trạng thái khác (Đã xác nhận, Đang giao) thì ẨN nút Hủy
+                    holder.btnCancel.setVisibility(View.GONE); // ẨN nút Hủy
+
+                    if (status == DBHelper.STATUS_CONFIRMED) {
+                        holder.btnNext.setText("Giao hàng");
+                    } else if (status == DBHelper.STATUS_SHIPPING) {
+                        holder.btnNext.setText("Hoàn thành");
+                    }
+                }
             }
 
             holder.btnNext.setOnClickListener(v -> listener.onUpdateStatus(id, status));
