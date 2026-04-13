@@ -129,4 +129,31 @@ public class FruitDAO {
         values.put(DBHelper.COL_FRUIT_DESC, fruit.getDescription());
         database.update(DBHelper.TABLE_FRUIT, values, DBHelper.COL_FRUIT_ID + " = ?", new String[]{String.valueOf(fruit.getId())});
     }
+
+    // Thêm vào FruitDAO.java
+    public long insertFruit(Fruit f) {
+        ContentValues values = new ContentValues();
+        values.put(DBHelper.COL_FRUIT_NAME, f.getName());
+        values.put(DBHelper.COL_FRUIT_DESC, f.getDescription());
+        values.put(DBHelper.COL_FRUIT_IMG, f.getImage());
+        values.put(DBHelper.COL_FRUIT_CAT_ID, f.getCategoryId());
+        values.put(DBHelper.COL_FRUIT_STATUS, 1); // Mặc định là còn hàng
+        return database.insert(DBHelper.TABLE_FRUIT, null, values);
+    }
+
+    public boolean deleteFruit(int id) {
+        return database.delete(DBHelper.TABLE_FRUIT, DBHelper.COL_FRUIT_ID + " = ?", new String[]{String.valueOf(id)}) > 0;
+    }
+
+    public boolean updateFruitFull(Fruit f) {
+        ContentValues values = new ContentValues();
+        values.put(DBHelper.COL_FRUIT_NAME, f.getName());
+        values.put(DBHelper.COL_FRUIT_DESC, f.getDescription());
+        values.put(DBHelper.COL_FRUIT_IMG, f.getImage());
+        values.put(DBHelper.COL_FRUIT_CAT_ID, f.getCategoryId());
+        values.put(DBHelper.COL_FRUIT_STATUS, f.getStatus());
+        return database.update(DBHelper.TABLE_FRUIT, values, DBHelper.COL_FRUIT_ID + " = ?", new String[]{String.valueOf(f.getId())}) > 0;
+    }
+
+
 }

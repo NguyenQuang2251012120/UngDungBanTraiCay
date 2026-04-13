@@ -28,9 +28,9 @@ public class HomeFragment extends Fragment {
     FruitAdapter fruitAdapter;
     CategoryAdapter categoryAdapter;
 
-    // ĐỔI SANG List ĐỂ ĐỒNG BỘ VỚI DAO
-    List<Fruit> fruitList;
-    List<Category> categoryList;
+    // Khởi tạo sẵn List để tránh NullPointerException khi gọi .clear()
+    List<Fruit> fruitList = new ArrayList<>();
+    List<Category> categoryList = new ArrayList<>();
 
     FruitDAO fruitDAO;
     CategoryDAO categoryDAO;
@@ -39,16 +39,15 @@ public class HomeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
+        // 1. Ánh xạ và khởi tạo DAO
         recyclerFruit = view.findViewById(R.id.recyclerFruit);
         recyclerCategory = view.findViewById(R.id.recyclerCategory);
-
         fruitDAO = new FruitDAO(getContext());
         categoryDAO = new CategoryDAO(getContext());
 
-        // 2. Thiết lập Danh mục
-        categoryList = categoryDAO.getAllCategory();
+        // 2. Thiết lập Adapter cho Danh mục (Category)
         categoryAdapter = new CategoryAdapter(getContext(), (ArrayList<Category>) categoryList, category -> {
-            // Cập nhật lại danh sách trái cây khi click danh mục
+            // Lọc trái cây theo danh mục
             List<Fruit> filteredFruits = fruitDAO.getFruitsByCategory(category.getId());
             fruitList.clear();
             fruitList.addAll(filteredFruits);
@@ -57,20 +56,36 @@ public class HomeFragment extends Fragment {
         recyclerCategory.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         recyclerCategory.setAdapter(categoryAdapter);
 
-        // 3. Thiết lập Trái cây
-        // Lưu ý: Gọi đúng tên hàm getAllFruits() (có s)
-        fruitList = fruitDAO.getAllFruits();
-
+        // 3. Thiết lập Adapter cho Trái cây (Fruit)
         fruitAdapter = new FruitAdapter(getContext(), (ArrayList<Fruit>) fruitList, fruit -> {
             Intent intent = new Intent(getActivity(), FruitDetailActivity.class);
             intent.putExtra("fruit_item", fruit);
             startActivity(intent);
         });
-
         recyclerFruit.setLayoutManager(new GridLayoutManager(getContext(), 2));
         recyclerFruit.setNestedScrollingEnabled(false);
         recyclerFruit.setAdapter(fruitAdapter);
 
+        // Đừng gọi loadData trực tiếp ở đây vì onResume sẽ lo việc này ngay sau đó
         return view;
+    }
+
+    // --- HÀM QUAN TRỌNG: Tự động làm mới khi quay lại ---
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadData(); // Cập nhật lại dữ liệu mỗi khi màn hình hiện ra
+    }
+
+    private void loadData() {
+        // Cập nhật Danh mục
+        categoryList.clear();
+        categoryList.addAll(categoryDAO.getAllCategory());
+        categoryAdapter.notifyDataSetChanged();
+
+        // Cập nhật Trái cây (Load lại từ DB để lấy giá mới nhất, ảnh mới...)
+        fruitList.clear();
+        fruitList.addAll(fruitDAO.getAllFruits());
+        fruitAdapter.notifyDataSetChanged();
     }
 }

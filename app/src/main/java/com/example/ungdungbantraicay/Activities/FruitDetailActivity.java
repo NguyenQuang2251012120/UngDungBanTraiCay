@@ -316,8 +316,9 @@ public class FruitDetailActivity extends AppCompatActivity {
     private void displayFruitInfo(Fruit fruit) {
         tvName.setText(fruit.getName());
         tvDescription.setText(fruit.getDescription());
-        int resId = getResources().getIdentifier(fruit.getImage(), "drawable", getPackageName());
-        if (resId != 0) imgFruit.setImageResource(resId);
+
+        // CHỈ CẦN DÒNG NÀY:
+        com.example.ungdungbantraicay.Helper.ImageHelper.loadFruitImage(this, fruit.getImage(), imgFruit);
 
         Category category = categoryDAO.getCategoryById(fruit.getCategoryId());
         if (category != null) {

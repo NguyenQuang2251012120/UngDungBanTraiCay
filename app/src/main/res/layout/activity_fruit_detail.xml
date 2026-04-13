@@ -200,7 +200,9 @@
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"            android:layout_width="0dp"
             android:layout_height="55dp"
             android:layout_weight="1"
+            android:textColor="@color/white"
             android:text="Thêm Giỏ"
+            android:backgroundTint="@color/teal_700"
             app_res:cornerRadius="8dp" />
 
     </LinearLayout>

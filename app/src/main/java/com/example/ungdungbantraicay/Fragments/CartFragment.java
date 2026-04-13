@@ -1,6 +1,8 @@
 package com.example.ungdungbantraicay.Fragments;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,6 +24,7 @@ import com.example.ungdungbantraicay.Adapter.CartAdapter;
 import com.example.ungdungbantraicay.DAO.CartDAO;
 import com.example.ungdungbantraicay.DAO.OrderDAO;
 import com.example.ungdungbantraicay.DAO.UserDAO;
+import com.example.ungdungbantraicay.Helper.VNPayHelper;
 import com.example.ungdungbantraicay.Model.CartItem;
 import com.example.ungdungbantraicay.R;
 
@@ -34,6 +38,7 @@ public class CartFragment extends Fragment {
     CartAdapter adapter;
     int userId;
     private LinearLayout layoutEmptyCart;
+    private String tmpName, tmpPhone, tmpAddress;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -155,79 +160,136 @@ public class CartFragment extends Fragment {
     }
 
     // --- LOGIC THANH TOÁN GIỮ NGUYÊN NHƯNG GỌI HÀM SẠCH SẼ HƠN ---
-    private void handleCheckout() {
-        if (cartList == null || cartList.isEmpty()) {
-            Toast.makeText(getContext(), "Giỏ hàng rỗng!", Toast.LENGTH_SHORT).show();
+//    private void handleCheckout() {
+//        if (cartList == null || cartList.isEmpty()) {
+//            Toast.makeText(getContext(), "Giỏ hàng rỗng!", Toast.LENGTH_SHORT).show();
+//            return;
+//        }
+//
+//        UserDAO userDAO = new UserDAO(getContext());
+//        String defaultAddress = userDAO.getAddressByUserId(userId);
+//
+////        final EditText edtAddress = new EditText(getContext());
+////        edtAddress.setHint("Nhập địa chỉ nhận hàng...");
+////        edtAddress.setText(defaultAddress);
+////
+////        FrameLayout container = new FrameLayout(getContext());
+////        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+////                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+////        params.leftMargin = 50; params.rightMargin = 50;
+////        edtAddress.setLayoutParams(params);
+////        container.addView(edtAddress);
+//
+////        new AlertDialog.Builder(getContext())
+////                .setTitle("Xác nhận đơn hàng")
+////                .setMessage("Kiểm tra lại địa chỉ giao hàng của bạn:")
+////                .setView(container)
+////                .setPositiveButton("Đặt ngay", (dialog, which) -> {
+////                    String finalAddress = edtAddress.getText().toString().trim();
+////                    if (finalAddress.isEmpty()) {
+////                        Toast.makeText(getContext(), "Vui lòng không để trống địa chỉ!", Toast.LENGTH_SHORT).show();
+////                    } else {
+////                        performOrder(finalAddress);
+////                    }
+////                })
+////                .setNegativeButton("Hủy", null)
+////                .show();
+//        LayoutInflater inflater = LayoutInflater.from(getContext());
+//        View view = inflater.inflate(R.layout.dialog_checkout, null);
+//
+//        EditText edtName = view.findViewById(R.id.edtName);
+//        EditText edtPhone = view.findViewById(R.id.edtPhone);
+//        EditText edtTime = view.findViewById(R.id.edtTime);
+//        EditText edtAddress = view.findViewById(R.id.edtAddress);
+//        edtAddress.setText(defaultAddress);
+//
+//
+//        AlertDialog dialog = new AlertDialog.Builder(getContext())
+//                .setTitle("Xác nhận đơn hàng")
+//                .setView(view)
+//                .setPositiveButton("Đặt ngay", null)
+//                .setNegativeButton("Hủy", null)
+//                .create();
+//        dialog.show();
+//
+//        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+//            String name = edtName.getText().toString().trim();
+//            String phone = edtPhone.getText().toString().trim();
+//            String address = edtAddress.getText().toString().trim();
+//            String time = edtTime.getText().toString().trim();
+//
+//            if (name.isEmpty() || phone.isEmpty() || address.isEmpty() || time.isEmpty()) {
+//                Toast.makeText(getContext(), "Vui lòng nhập đầy đủ thông tin!", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+//            else {
+//                performOrder(address);
+//            }
+//            dialog.dismiss();
+//        });
+//    }
+
+private void handleCheckout() {
+    if (cartList == null || cartList.isEmpty()) {
+        Toast.makeText(getContext(), "Giỏ hàng rỗng!", Toast.LENGTH_SHORT).show();
+        return;
+    }
+
+    UserDAO userDAO = new UserDAO(getContext());
+    String defaultAddress = userDAO.getAddressByUserId(userId);
+
+    LayoutInflater inflater = LayoutInflater.from(getContext());
+    View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_checkout, null);
+    EditText edtName = dialogView.findViewById(R.id.edtName);
+    EditText edtPhone = dialogView.findViewById(R.id.edtPhone);
+    EditText edtAddress = dialogView.findViewById(R.id.edtAddress);
+    RadioButton rbVNPay = dialogView.findViewById(R.id.rbVNPay); // Nút VNPay
+
+    AlertDialog dialog = new AlertDialog.Builder(getContext())
+            .setTitle("Xác nhận đơn hàng")
+            .setView(dialogView)
+            .setPositiveButton("Xác nhận", null)
+            .setNegativeButton("Hủy", null)
+            .create();
+
+    dialog.show();
+
+// TRONG CartFragment.java -> handleCheckout()
+    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+        tmpName = edtName.getText().toString().trim();
+        tmpPhone = edtPhone.getText().toString().trim();
+        tmpAddress = edtAddress.getText().toString().trim();
+
+        if (tmpName.isEmpty() || tmpPhone.isEmpty() || tmpAddress.isEmpty()) {
+            Toast.makeText(getContext(), "Vui lòng nhập đủ thông tin!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        UserDAO userDAO = new UserDAO(getContext());
-        String defaultAddress = userDAO.getAddressByUserId(userId);
+        if (rbVNPay != null && rbVNPay.isChecked()) {
+            // --- BƯỚC QUAN TRỌNG NHẤT: Lưu vào bộ nhớ tạm ---
+            android.content.SharedPreferences tempPref = getActivity().getSharedPreferences("TEMP_ORDER", Context.MODE_PRIVATE);
+            android.content.SharedPreferences.Editor editor = tempPref.edit();
+            editor.putString("name", tmpName);
+            editor.putString("phone", tmpPhone);
+            editor.putString("address", tmpAddress);
+            editor.apply(); // Lưu ngay lập tức
 
-//        final EditText edtAddress = new EditText(getContext());
-//        edtAddress.setHint("Nhập địa chỉ nhận hàng...");
-//        edtAddress.setText(defaultAddress);
-//
-//        FrameLayout container = new FrameLayout(getContext());
-//        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-//                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-//        params.leftMargin = 50; params.rightMargin = 50;
-//        edtAddress.setLayoutParams(params);
-//        container.addView(edtAddress);
-
-//        new AlertDialog.Builder(getContext())
-//                .setTitle("Xác nhận đơn hàng")
-//                .setMessage("Kiểm tra lại địa chỉ giao hàng của bạn:")
-//                .setView(container)
-//                .setPositiveButton("Đặt ngay", (dialog, which) -> {
-//                    String finalAddress = edtAddress.getText().toString().trim();
-//                    if (finalAddress.isEmpty()) {
-//                        Toast.makeText(getContext(), "Vui lòng không để trống địa chỉ!", Toast.LENGTH_SHORT).show();
-//                    } else {
-//                        performOrder(finalAddress);
-//                    }
-//                })
-//                .setNegativeButton("Hủy", null)
-//                .show();
-        LayoutInflater inflater = LayoutInflater.from(getContext());
-        View view = inflater.inflate(R.layout.dialog_checkout, null);
-
-        EditText edtName = view.findViewById(R.id.edtName);
-        EditText edtPhone = view.findViewById(R.id.edtPhone);
-        EditText edtTime = view.findViewById(R.id.edtTime);
-        EditText edtAddress = view.findViewById(R.id.edtAddress);
-        edtAddress.setText(defaultAddress);
-
-
-        AlertDialog dialog = new AlertDialog.Builder(getContext())
-                .setTitle("Xác nhận đơn hàng")
-                .setView(view)
-                .setPositiveButton("Đặt ngay", null)
-                .setNegativeButton("Hủy", null)
-                .create();
-        dialog.show();
-
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            String name = edtName.getText().toString().trim();
-            String phone = edtPhone.getText().toString().trim();
-            String address = edtAddress.getText().toString().trim();
-            String time = edtTime.getText().toString().trim();
-
-            if (name.isEmpty() || phone.isEmpty() || address.isEmpty() || time.isEmpty()) {
-                Toast.makeText(getContext(), "Vui lòng nhập đầy đủ thông tin!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            else {
-                performOrder(address);
-            }
-            dialog.dismiss();
-        });
-    }
-    private void performOrder(String finalAddress) {
+            // Sau đó mới mở VNPay
+            String url = VNPayHelper.createPaymentUrl(calculateTotalValue(), "ORDER_" + System.currentTimeMillis());
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        } else {
+            performOrder(tmpAddress, tmpName, tmpPhone, 0);
+        }
+        dialog.dismiss();
+    });
+}
+    private void performOrder(String address, String name, String phone, int paymentMethod) {
         OrderDAO orderDAO = new OrderDAO(getContext());
         int total = calculateTotalValue();
 
-        boolean isSuccess = orderDAO.placeOrder(userId, total, finalAddress, cartList);
+        // Truyền đủ 7 tham số
+        boolean isSuccess = orderDAO.placeOrder(userId, total, address, name, phone, paymentMethod, cartList);
 
         if (isSuccess) {
             Toast.makeText(getContext(), "Đặt hàng thành công!", Toast.LENGTH_LONG).show();
@@ -237,5 +299,5 @@ public class CartFragment extends Fragment {
         } else {
             Toast.makeText(getContext(), "Lỗi hệ thống, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
         }
-    }
-}
+    }}
+

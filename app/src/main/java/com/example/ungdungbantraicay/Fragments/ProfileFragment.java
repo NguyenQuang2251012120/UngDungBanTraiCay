@@ -23,16 +23,14 @@ import com.example.ungdungbantraicay.R;
 public class ProfileFragment extends Fragment {
 
     TextView txtUsername, txtFullname, txtEmail, txtPhone, txtAddress;
-    Button btnEditProfile, btnChangePassword, btnLogout;
+    Button btnEditProfile, btnChangePassword, btnLogout, btnDeleteAccount; // Thêm btnDeleteAccount
     UserDAO userDAO;
-
-    public ProfileFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        // Ánh xạ View chính xác với XML
+        // --- Ánh xạ các View cũ giữ nguyên ---
         txtUsername = view.findViewById(R.id.txtUsername);
         txtFullname = view.findViewById(R.id.txtFullname);
         txtEmail = view.findViewById(R.id.txtEmail);
@@ -42,9 +40,10 @@ public class ProfileFragment extends Fragment {
         btnChangePassword = view.findViewById(R.id.btnChangePassword);
         btnLogout = view.findViewById(R.id.btnLogout);
 
-        userDAO = new UserDAO(getActivity());
+        // --- Ánh xạ nút xóa mới ---
+        btnDeleteAccount = view.findViewById(R.id.btnDeleteAccount);
 
-        // Load dữ liệu lần đầu
+        userDAO = new UserDAO(getActivity());
         loadUser();
 
         btnEditProfile.setOnClickListener(v -> {
@@ -69,8 +68,42 @@ public class ProfileFragment extends Fragment {
                     .show();
         });
 
+        btnDeleteAccount.setOnClickListener(v -> {
+            new androidx.appcompat.app.AlertDialog.Builder(getActivity())
+                    .setTitle("CẢNH BÁO!")
+                    .setMessage("Bạn có chắc chắn muốn xóa tài khoản này? Mọi dữ liệu sẽ biến mất vĩnh viễn!")
+                    .setPositiveButton("Xóa luôn", (dialog, which) -> {
+                        // 1. Lấy thông tin user hiện tại
+                        SharedPreferences prefs = getActivity().getSharedPreferences("USER_FILE", Context.MODE_PRIVATE);
+                        String username = prefs.getString("username", "");
+                        User currentUser = userDAO.getUserInfo(username);
+
+                        if (currentUser != null) {
+                            // 2. Gọi DAO để xóa trong SQLite
+                            if (userDAO.deleteUser(currentUser.getId())) {
+                                // 3. Xóa sạch Session (SharedPreferences)
+                                prefs.edit().clear().apply();
+
+                                // 4. Đuổi ra màn hình Login và xóa sạch lịch sử chạy (Back không quay lại được)
+                                Intent intent = new Intent(getActivity(), LoginActivity.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+
+                                Toast.makeText(getActivity(), "Tài khoản của bạn đã bị xóa!", Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(getActivity(), "Không thể xóa (có thể bạn đã có đơn hàng)!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    })
+                    .setNegativeButton("Hủy", null)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+        });
+
         return view;
     }
+
+
 
     @Override
     public void onResume() {

@@ -1,4 +1,4 @@
-package com.example.ungdungbantraicay.Activities;
+package com.example.ungdungbantraicay.AdminFragments;
 
 import android.os.Bundle;
 import androidx.activity.EdgeToEdge;
@@ -8,11 +8,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
-import com.example.ungdungbantraicay.AdminFragments.AdminCategoryFragment;
-import com.example.ungdungbantraicay.AdminFragments.AdminFruitFragment;
-import com.example.ungdungbantraicay.AdminFragments.AdminOrderFragment;
-import com.example.ungdungbantraicay.AdminFragments.AdminProfileFragment;
-import com.example.ungdungbantraicay.AdminFragments.AdminUserFragment;
 import com.example.ungdungbantraicay.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 

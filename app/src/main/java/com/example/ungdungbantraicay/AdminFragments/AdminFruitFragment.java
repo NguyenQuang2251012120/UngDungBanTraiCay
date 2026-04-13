@@ -1,66 +1,229 @@
 package com.example.ungdungbantraicay.AdminFragments;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.example.ungdungbantraicay.AdminAdapter.AdminFruitAdapter;
+import com.example.ungdungbantraicay.DAO.CategoryDAO;
+import com.example.ungdungbantraicay.DAO.FruitDAO;
+import com.example.ungdungbantraicay.Model.Category;
+import com.example.ungdungbantraicay.Model.Fruit;
 import com.example.ungdungbantraicay.R;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link AdminFruitFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 public class AdminFruitFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    RecyclerView rvFruit;
+    FruitDAO fruitDAO;
+    AdminFruitAdapter adapter;
+    List<Fruit> fruitList;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private Uri selectedImageUri;
+    private ImageView imgPreview;
 
-    public AdminFruitFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment AdminFruitFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static AdminFruitFragment newInstance(String param1, String param2) {
-        AdminFruitFragment fragment = new AdminFruitFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    // Bộ lắng nghe kết quả chọn ảnh từ thư viện
+    private final ActivityResultLauncher<Intent> pickImageLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == android.app.Activity.RESULT_OK && result.getData() != null) {
+                    selectedImageUri = result.getData().getData();
+                    if (imgPreview != null) {
+                        imgPreview.setImageURI(selectedImageUri);
+                    }
+                }
+            }
+    );
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_admin_fruit, container, false);
+        rvFruit = view.findViewById(R.id.rvAdminFruit);
+        fruitDAO = new FruitDAO(getContext());
+        FloatingActionButton fabAdd = view.findViewById(R.id.fabAddFruit);
+
+        fabAdd.setOnClickListener(v -> showDialogFruit(null));
+
+        loadData();
+        return view;
+    }
+
+    private void loadData() {
+        fruitList = fruitDAO.getAllFruits();
+        adapter = new AdminFruitAdapter(getContext(), fruitList, new AdminFruitAdapter.OnFruitActionListener() {
+            @Override
+            public void onEdit(Fruit fruit) {
+                showDialogFruit(fruit);
+            }
+
+            @Override
+            public void onDelete(Fruit fruit) {
+                confirmDelete(fruit);
+            }
+        });
+        rvFruit.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvFruit.setAdapter(adapter);
+    }
+
+    private void showDialogFruit(Fruit fruit) {
+        selectedImageUri = null; // Reset đường dẫn mỗi lần mở dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        View view = getLayoutInflater().inflate(R.layout.dialog_add_fruit, null);
+
+        EditText edtName = view.findViewById(R.id.edtFruitName);
+        EditText edtDesc = view.findViewById(R.id.edtFruitDesc);
+        imgPreview = view.findViewById(R.id.imgPreview);
+        Button btnSelect = view.findViewById(R.id.btnSelectImage);
+        Spinner spnCat = view.findViewById(R.id.spnCategory);
+        CheckBox chkStatus = view.findViewById(R.id.chkStatus);
+
+        CategoryDAO catDAO = new CategoryDAO(getContext());
+        List<Category> catList = catDAO.getAllCategory();
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(getContext(),
+                android.R.layout.simple_spinner_item, getCategoryNames(catList));
+        catAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spnCat.setAdapter(catAdapter);
+
+        boolean isEdit = (fruit != null);
+        if (isEdit) {
+            builder.setTitle("Cập nhật trái cây");
+            edtName.setText(fruit.getName());
+            edtDesc.setText(fruit.getDescription());
+            chkStatus.setChecked(fruit.getStatus() == 1);
+            spnCat.setSelection(getCategoryPosition(catList, fruit.getCategoryId()));
+
+            // Load ảnh hiện tại vào preview
+            loadImageToView(fruit.getImage(), imgPreview);
+        } else {
+            builder.setTitle("Thêm trái cây mới");
+        }
+
+        btnSelect.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setType("image/*");
+            pickImageLauncher.launch(intent);
+        });
+
+        builder.setView(view);
+        builder.setPositiveButton(isEdit ? "Cập nhật" : "Thêm mới", (dialog, which) -> {
+            String name = edtName.getText().toString().trim();
+            String desc = edtDesc.getText().toString().trim();
+            int catId = catList.get(spnCat.getSelectedItemPosition()).getId();
+            int status = chkStatus.isChecked() ? 1 : 0;
+
+            if (name.isEmpty()) {
+                Toast.makeText(getContext(), "Vui lòng nhập tên!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Xử lý lưu ảnh
+            String finalImagePath = isEdit ? fruit.getImage() : "apple"; // Mặc định nếu không chọn
+            if (selectedImageUri != null) {
+                finalImagePath = saveImageToInternal(selectedImageUri);
+            }
+
+            if (isEdit) {
+                fruit.setName(name);
+                fruit.setDescription(desc);
+                fruit.setImage(finalImagePath);
+                fruit.setCategoryId(catId);
+                fruit.setStatus(status);
+                fruitDAO.updateFruitFull(fruit);
+            } else {
+                Fruit newFruit = new Fruit(0, name, desc, finalImagePath, catId, status, 0.0f);
+                fruitDAO.insertFruit(newFruit);
+            }
+            loadData();
+        });
+
+        builder.setNegativeButton("Hủy", null);
+        builder.create().show();
+    }
+
+    // Hàm lưu Uri ảnh vào thư mục files của App
+    private String saveImageToInternal(Uri uri) {
+        try {
+            String fileName = "img_" + System.currentTimeMillis() + ".jpg";
+            InputStream inputStream = getContext().getContentResolver().openInputStream(uri);
+            FileOutputStream outputStream = getContext().openFileOutput(fileName, Context.MODE_PRIVATE);
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, read);
+            }
+            inputStream.close();
+            outputStream.close();
+            return fileName;
+        } catch (Exception e) {
+            return "apple";
         }
     }
 
+    // Hàm load ảnh thông minh
+    private void loadImageToView(String fileName, ImageView imageView) {
+        int resId = getResources().getIdentifier(fileName, "drawable", getContext().getPackageName());
+        if (resId != 0) {
+            Glide.with(this).load(resId).into(imageView);
+        } else {
+            File file = new File(getContext().getFilesDir(), fileName);
+            Glide.with(this).load(file).into(imageView);
+        }
+    }
+
+    private void confirmDelete(Fruit fruit) {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Xác nhận")
+                .setMessage("Xóa " + fruit.getName() + "?")
+                .setPositiveButton("Xóa", (d, w) -> {
+                    if (fruitDAO.deleteFruit(fruit.getId())) {
+                        loadData();
+                    }
+                }).setNegativeButton("Hủy", null).show();
+    }
+
+    private List<String> getCategoryNames(List<Category> list) {
+        List<String> names = new ArrayList<>();
+        for (Category c : list) names.add(c.getName());
+        return names;
+    }
+
+    private int getCategoryPosition(List<Category> list, int catId) {
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).getId() == catId) return i;
+        }
+        return 0;
+    }
+
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_admin_fruit, container, false);
+    public void onResume() {
+        super.onResume();
+        // Mỗi khi Admin quay lại màn hình này (ví dụ sau khi chỉnh sửa Size hoặc Category)
+        // hàm loadData() sẽ chạy để cập nhật lại giao diện ngay lập tức.
+        loadData();
     }
 }
