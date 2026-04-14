@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DBHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "FruitShop.db";
-    private static final int DB_VERSION = 10; // Tăng lên 10 để làm mới toàn bộ cấu trúc
+    private static final int DB_VERSION = 11; // Tăng lên 10 để làm mới toàn bộ cấu trúc
 
     // =============================================================
     // ĐỊNH NGHĨA TÊN BẢNG VÀ CỘT (GIỮ NGUYÊN)
@@ -74,6 +74,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String COL_ORDER_RECEIVER_NAME = "receiver_name";
     public static final String COL_ORDER_RECEIVER_PHONE = "receiver_phone";
     public static final String COL_ORDER_PAYMENT_METHOD = "payment_method";
+    public static final String COL_USER_TOKEN = "fcmToken";
 
     public static final String TABLE_ORDER_ITEM = "OrderItem";
     public static final String COL_OI_ID = "id";
@@ -101,6 +102,7 @@ public class DBHelper extends SQLiteOpenHelper {
             + COL_USER_PHONE + " TEXT, "
             + COL_USER_ADDRESS + " TEXT, "
             + COL_USER_ROLE + " TEXT, "
+            + COL_USER_TOKEN + " TEXT, "
             + COL_USER_STATUS + " INTEGER DEFAULT 1)";
 
     private static final String CREATE_TABLE_CATEGORY = "CREATE TABLE " + TABLE_CATEGORY + " ("

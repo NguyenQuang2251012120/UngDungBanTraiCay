@@ -39,6 +39,7 @@ public class UserDAO {
                     cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_PHONE)),
                     cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_ADDRESS)),
                     cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_ROLE)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_TOKEN)),
                     cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_STATUS))
             );
         }
@@ -125,6 +126,7 @@ public class UserDAO {
                     cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_PHONE)),
                     cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_ADDRESS)),
                     cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_ROLE)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_TOKEN)),
                     cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_STATUS))
             );
         }
@@ -163,7 +165,7 @@ public class UserDAO {
                 list.add(new User(
                         cursor.getInt(0), cursor.getString(1), cursor.getString(2),
                         cursor.getString(3), cursor.getString(4), cursor.getString(5),
-                        cursor.getString(6), cursor.getString(7), cursor.getInt(8)
+                        cursor.getString(6), cursor.getString(7), cursor.getString(8), cursor.getInt(9)
                 ));
             } while (cursor.moveToNext());
         }
@@ -226,5 +228,40 @@ public class UserDAO {
         int rows = database.update(TABLE_USER, values, DBHelper.COL_USER_ID + "=?",
                 new String[]{String.valueOf(user.getId())});
         return rows > 0;
+    }
+
+    public boolean updateFcmToken(int userId, String token) {
+        ContentValues values = new ContentValues();
+        values.put("fcmToken", token);
+
+        int rows = database.update("User", values, "id=?",
+                new String[]{String.valueOf(userId)});
+
+        return rows > 0;
+    }
+
+    public User getUserInfoById(int userId) {
+        User user = null;
+
+        String query = "SELECT * FROM " + TABLE_USER + " WHERE " + DBHelper.COL_USER_ID + "=?";
+        Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(userId)});
+
+        if (cursor.moveToFirst()) {
+            user = new User(
+                    cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_ID)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_NAME)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_PASS)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_FULLNAME)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_EMAIL)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_PHONE)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_ADDRESS)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_ROLE)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_TOKEN)),
+                    cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_STATUS))
+            );
+        }
+
+        cursor.close();
+        return user;
     }
 }

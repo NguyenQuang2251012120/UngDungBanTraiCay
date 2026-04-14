@@ -4,14 +4,14 @@ import java.io.Serializable;
 
 public class User implements Serializable {
     private int id;
-    private String username, password, fullname, email, phone, address, role;
+    private String username, password, fullname, email, phone, address, role, fcmToken;
     private int status;
 
     public User() {}
 
     // Constructor đầy đủ cho DAO
     public User(int id, String username, String password, String fullname,
-                String email, String phone, String address, String role, int status) {
+                String email, String phone, String address, String role, String fcmToken, int status) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -21,6 +21,7 @@ public class User implements Serializable {
         this.address = address;
         this.role = role;
         this.status = status;
+        this.fcmToken = fcmToken;
     }
 
     public int getId() {
@@ -88,4 +89,12 @@ public class User implements Serializable {
     }
     public int getStatus() { return status; }
     public void setStatus(int status) { this.status = status; }
+
+    public String getFcmToken() {
+        return fcmToken;
+    }
+
+    public void setFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
+    }
 }

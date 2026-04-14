@@ -27,8 +27,11 @@ import com.example.ungdungbantraicay.DAO.UserDAO;
 import com.example.ungdungbantraicay.Helper.VNPayHelper;
 import com.example.ungdungbantraicay.Model.CartItem;
 import com.example.ungdungbantraicay.R;
+import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CartFragment extends Fragment {
     RecyclerView recyclerCart;
@@ -299,5 +302,23 @@ private void handleCheckout() {
         } else {
             Toast.makeText(getContext(), "Lỗi hệ thống, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
         }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        Map<String, Object> order = new HashMap<>();
+        order.put("userId", userId);
+        order.put("address", address);
+        order.put("status", "pending");
+
+        UserDAO dao = new UserDAO(getContext());
+        String token = dao.getUserInfoById(userId).getFcmToken();
+
+        order.put("fcmToken", token);
+
+        db.collection("orders")
+                .add(order)
+                .addOnSuccessListener(documentReference -> {
+                    Toast.makeText(getContext(), "Đặt hàng thành công", Toast.LENGTH_SHORT).show();
+                });
     }}
 

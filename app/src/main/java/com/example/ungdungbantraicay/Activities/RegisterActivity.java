@@ -1,14 +1,19 @@
 package com.example.ungdungbantraicay.Activities;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.ungdungbantraicay.DAO.UserDAO;
 import com.example.ungdungbantraicay.Model.User;
 import com.example.ungdungbantraicay.R;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -16,13 +21,26 @@ public class RegisterActivity extends AppCompatActivity {
     Button btnReg;
     UserDAO userDAO;
 
+    // 🔥 Token Firebase
+    private String fcmToken = "";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        FirebaseApp.initializeApp(this);
+
         setContentView(R.layout.activity_register);
 
         initViews();
         userDAO = new UserDAO(this);
+
+        FirebaseMessaging.getInstance().getToken()
+                .addOnSuccessListener(token -> {
+                    fcmToken = token;
+                    Log.d("FCM_TOKEN", token);
+
+                });
 
         btnReg.setOnClickListener(v -> handleRegister());
     }
@@ -35,6 +53,9 @@ public class RegisterActivity extends AppCompatActivity {
         edtEmail = findViewById(R.id.edtEmail);
         edtPhone = findViewById(R.id.edtPhone);
         edtAddr = findViewById(R.id.edtAddress);
+
+        // edtToken = findViewById(R.id.edtToken);
+
         btnReg = findViewById(R.id.btnRegister);
     }
 
@@ -47,7 +68,10 @@ public class RegisterActivity extends AppCompatActivity {
         String phone = edtPhone.getText().toString().trim();
         String addr = edtAddr.getText().toString().trim();
 
-        // 1. VALIDATION (Kiểm tra dữ liệu)
+        // 🔥 KHÔNG lấy token từ EditText nữa
+        String token = fcmToken;
+
+        // ================= VALIDATION =================
         if (user.length() < 5) {
             edtUser.setError("Tên đăng nhập tối thiểu 5 ký tự");
             return;
@@ -69,23 +93,37 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        // 2. KIỂM TRA TỒN TẠI (Kể cả status = 0)
-        // Trong DAO, hàm checkUsername nên SELECT * WHERE username = ? (không quan tâm status)
-        if (userDAO.checkUsername(user)) {
-            Toast.makeText(this, "Tên đăng nhập này đã có người sử dụng!", Toast.LENGTH_LONG).show();
+        // 🔥 Đảm bảo token đã có
+        if (token.isEmpty()) {
+            Toast.makeText(this, "Đang lấy token, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 3. THỰC HIỆN ĐĂNG KÝ
-        // Thay vì dùng setter, ta dùng Constructor (để trống ID vì DB tự tăng, Status mặc định là 1)
-        // Lưu ý: Tùy vào Constructor bạn tạo ở Model User, bạn có thể truyền status = 1 trực tiếp.
-        User newUser = new User(0, user, pass, full, email, phone, addr, "user", 1);
+        // ================= CHECK USER =================
+        if (userDAO.checkUsername(user)) {
+            Toast.makeText(this, "Tên đăng nhập đã tồn tại!", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // ================= INSERT =================
+        User newUser = new User(
+                0,
+                user,
+                pass,
+                full,
+                email,
+                phone,
+                addr,
+                "user",
+                token,   // 🔥 token thật
+                1
+        );
 
         if (userDAO.insertUser(newUser)) {
             Toast.makeText(this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            Toast.makeText(this, "Lỗi hệ thống, vui lòng thử lại sau!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Lỗi hệ thống!", Toast.LENGTH_SHORT).show();
         }
     }
 }

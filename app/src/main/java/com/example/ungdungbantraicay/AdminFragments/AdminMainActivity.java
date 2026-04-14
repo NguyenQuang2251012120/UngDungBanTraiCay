@@ -43,7 +43,7 @@ public class AdminMainActivity extends AppCompatActivity {
                 selectedFragment = new AdminUserFragment();
             } else if (id == R.id.menu_fruit) {
                 selectedFragment = new AdminFruitFragment();
-            } else if (id == R.id.menu_catergory) { // Lưu ý typo "catergory" trong menu của bạn
+            } else if (id == R.id.menu_catergory) {
                 selectedFragment = new AdminCategoryFragment();
             } else if (id == R.id.menu_order) {
                 selectedFragment = new AdminOrderFragment();
