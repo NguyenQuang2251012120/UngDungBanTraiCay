@@ -10,14 +10,14 @@ import java.io.File;
 
 public class ImageHelper {
     public static void loadFruitImage(Context context, String imageName, ImageView imageView) {
-        // 1. Thử tìm trong drawable (ảnh mẫu)
+        // Thử tìm trong drawable (ảnh mẫu)
         int resId = context.getResources().getIdentifier(imageName, "drawable", context.getPackageName());
 
         if (resId != 0) {
             // Nếu tìm thấy trong drawable -> dùng Glide load resource
             Glide.with(context).load(resId).into(imageView);
         } else {
-            // 2. Nếu không thấy -> Thử tìm trong bộ nhớ máy (ảnh Admin chụp)
+            // Nếu không thấy -> Thử tìm trong bộ nhớ máy (ảnh Admin chụp)
             File file = new File(context.getFilesDir(), imageName);
             Glide.with(context)
                     .load(file)

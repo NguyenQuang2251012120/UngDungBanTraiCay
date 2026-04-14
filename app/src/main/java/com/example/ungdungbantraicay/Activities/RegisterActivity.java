@@ -54,8 +54,6 @@ public class RegisterActivity extends AppCompatActivity {
         edtPhone = findViewById(R.id.edtPhone);
         edtAddr = findViewById(R.id.edtAddress);
 
-        // edtToken = findViewById(R.id.edtToken);
-
         btnReg = findViewById(R.id.btnRegister);
     }
 
@@ -68,10 +66,8 @@ public class RegisterActivity extends AppCompatActivity {
         String phone = edtPhone.getText().toString().trim();
         String addr = edtAddr.getText().toString().trim();
 
-        // 🔥 KHÔNG lấy token từ EditText nữa
         String token = fcmToken;
 
-        // ================= VALIDATION =================
         if (user.length() < 5) {
             edtUser.setError("Tên đăng nhập tối thiểu 5 ký tự");
             return;
@@ -93,19 +89,16 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        // 🔥 Đảm bảo token đã có
         if (token.isEmpty()) {
             Toast.makeText(this, "Đang lấy token, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // ================= CHECK USER =================
         if (userDAO.checkUsername(user)) {
             Toast.makeText(this, "Tên đăng nhập đã tồn tại!", Toast.LENGTH_LONG).show();
             return;
         }
 
-        // ================= INSERT =================
         User newUser = new User(
                 0,
                 user,
@@ -115,7 +108,7 @@ public class RegisterActivity extends AppCompatActivity {
                 phone,
                 addr,
                 "user",
-                token,   // 🔥 token thật
+                token,
                 1
         );
 

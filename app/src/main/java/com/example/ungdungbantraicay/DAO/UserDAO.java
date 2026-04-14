@@ -116,7 +116,6 @@ public class UserDAO {
         Cursor cursor = database.rawQuery(query, new String[]{username});
 
         if (cursor.moveToFirst()) {
-            // Sử dụng Constructor đầy đủ (9 tham số)
             user = new User(
                     cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_ID)),
                     cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_USER_NAME)),
@@ -155,7 +154,7 @@ public class UserDAO {
         return address;
     }
 
-    // 1. Lấy tất cả người dùng trừ chính mình (để không tự xóa mình)
+    // Lấy tất cả người dùng trừ chính mình (để không tự xóa mình)
     public List<User> getAllUsersForAdmin(String currentAdminUsername) {
         List<User> list = new ArrayList<>();
         String query = "SELECT * FROM " + DBHelper.TABLE_USER + " WHERE username != ?";
@@ -173,7 +172,7 @@ public class UserDAO {
         return list;
     }
 
-    // 2. Thêm mới (Admin tạo hộ)
+    //  Thêm mới (Admin tạo hộ)
     public boolean insertUserAdmin(User user) {
         ContentValues values = new ContentValues();
         values.put(DBHelper.COL_USER_NAME, user.getUsername());
@@ -182,12 +181,12 @@ public class UserDAO {
         values.put(DBHelper.COL_USER_EMAIL, user.getEmail());
         values.put(DBHelper.COL_USER_PHONE, user.getPhone());
         values.put(DBHelper.COL_USER_ADDRESS, user.getAddress());
-        values.put(DBHelper.COL_USER_ROLE, user.getRole()); // Quan trọng: Có role
+        values.put(DBHelper.COL_USER_ROLE, user.getRole());
         values.put(DBHelper.COL_USER_STATUS, 1);
         return database.insert(DBHelper.TABLE_USER, null, values) > 0;
     }
 
-    // 3. Cập nhật thông tin (Sửa, Đổi role, Khóa/Mở)
+    // Cập nhật thông tin (Sửa, Đổi role, Khóa/Mở)
     public boolean updateUserAdmin(User user) {
         ContentValues v = new ContentValues();
         v.put(DBHelper.COL_USER_PASS, user.getPassword()); // THÊM DÒNG NÀY
@@ -200,14 +199,14 @@ public class UserDAO {
         return database.update(DBHelper.TABLE_USER, v, "id=?", new String[]{String.valueOf(user.getId())}) > 0;
     }
 
-    // 4. Xóa tài khoản
+    // Xóa tài khoản
     public boolean deleteUser(int id) {
         try {
             return database.delete(DBHelper.TABLE_USER, "id=?", new String[]{String.valueOf(id)}) > 0;
         } catch (Exception e) { return false; }
     }
 
-    // 1. Kiểm tra xem username mới đã tồn tại chưa
+    //  Kiểm tra xem username mới đã tồn tại chưa
     public boolean checkUsernameExists(String username) {
         Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_USER +
                 " WHERE " + DBHelper.COL_USER_NAME + "=?", new String[]{username});
@@ -216,7 +215,7 @@ public class UserDAO {
         return exists;
     }
 
-    // 2. Cập nhật thông tin (Dùng ID để làm điều kiện WHERE cho an toàn)
+    // Cập nhật thông tin (Dùng ID để làm điều kiện WHERE cho an toàn)
     public boolean updateUserWithId(User user) {
         ContentValues values = new ContentValues();
         values.put(DBHelper.COL_USER_NAME, user.getUsername()); // Cập nhật cả username mới

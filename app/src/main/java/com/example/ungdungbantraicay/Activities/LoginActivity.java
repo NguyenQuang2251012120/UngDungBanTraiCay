@@ -92,7 +92,6 @@ public class LoginActivity extends AppCompatActivity {
 
                 saveSession(user);
 
-                // 🔥 LẤY TOKEN SAU KHI LOGIN
                 FirebaseMessaging.getInstance().getToken()
                         .addOnSuccessListener(token -> {
                             userDAO.updateFcmToken(user.getId(), token);

@@ -79,7 +79,6 @@ public class AdminUserFragment extends Fragment {
             edtUser.setText(user.getUsername());
             edtUser.setEnabled(false); // Không cho sửa username
 
-            // --- THAY ĐỔI Ở ĐÂY ---
             edtPass.setVisibility(View.VISIBLE); // Cho hiện ô pass để sửa
             edtPass.setText(user.getPassword()); // Điền pass cũ vào ô nhập
             // ----------------------

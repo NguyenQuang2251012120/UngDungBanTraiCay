@@ -34,11 +34,8 @@ public class AdminUserAdapter extends RecyclerView.Adapter<AdminUserAdapter.View
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // 1. Nạp giao diện từ file XML layout của từng dòng item
-        // Lưu ý: Thay 'R.layout.item_admin_user' bằng tên file layout item của bạn
         View view = LayoutInflater.from(context).inflate(R.layout.item_user_admin, parent, false);
 
-        // 2. Trả về ViewHolder chứa view vừa nạp (KHÔNG được trả về null)
         return new ViewHolder(view);
     }
 
@@ -49,9 +46,7 @@ public class AdminUserAdapter extends RecyclerView.Adapter<AdminUserAdapter.View
         holder.tvRole.setText("Vai trò: " + user.getRole());
         holder.tvEmail.setText(user.getEmail());
 
-        // --- THÊM DÒNG NÀY ---
         holder.tvPassword.setText("Mật khẩu: ********");
-        // ---------------------
 
         holder.itemView.setAlpha(user.getStatus() == 1 ? 1.0f : 0.5f);
         holder.btnEdit.setOnClickListener(v -> listener.onEdit(user));

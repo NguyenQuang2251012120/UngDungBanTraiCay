@@ -10,10 +10,6 @@ public class DBHelper extends SQLiteOpenHelper {
     private static final String DB_NAME = "FruitShop.db";
     private static final int DB_VERSION = 11; // Tăng lên 10 để làm mới toàn bộ cấu trúc
 
-    // =============================================================
-    // ĐỊNH NGHĨA TÊN BẢNG VÀ CỘT (GIỮ NGUYÊN)
-    // =============================================================
-
     public static final String TABLE_USER = "User";
     public static final String COL_USER_ID = "id";
     public static final String COL_USER_NAME = "username";
@@ -88,10 +84,6 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final int STATUS_SHIPPING = 2;
     public static final int STATUS_SUCCESS = 3;
     public static final int STATUS_CANCELLED = 4;
-
-    // =============================================================
-    // CÂU LỆNH TẠO BẢNG (ĐÃ SỬA LỖI)
-    // =============================================================
 
     private static final String CREATE_TABLE_USER = "CREATE TABLE " + TABLE_USER + " ("
             + COL_USER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -188,7 +180,6 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_ORDER);
         db.execSQL(CREATE_TABLE_ORDER_ITEM);
 
-        // Chèn dữ liệu mẫu (Giữ nguyên phần Insert của bạn)
         insertSampleData(db);
     }
 
@@ -224,9 +215,6 @@ public class DBHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    // =============================================================
-    // HELPER METHODS (GIỮ NGUYÊN)
-    // =============================================================
 
     public boolean checkLogin(String username, String password) {
         SQLiteDatabase db = this.getReadableDatabase();
